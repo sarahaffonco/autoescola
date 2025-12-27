@@ -1,12 +1,27 @@
 import { NavLink } from "react-router-dom";
-import { Car, Calendar, Users, GraduationCap } from "lucide-react";
+import { Car, Calendar, GraduationCap, LogOut, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
+  const { signOut, userRole } = useAuth();
+  
   const navItems = [
     { to: "/", label: "Instrutor", icon: Car },
     { to: "/aluno", label: "Aluno", icon: GraduationCap },
     { to: "/agendamento", label: "Agendar", icon: Calendar },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
@@ -37,6 +52,24 @@ const Navbar = () => {
               </NavLink>
             ))}
           </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem disabled className="text-muted-foreground">
+                {userRole === 'instrutor' ? 'Instrutor' : 'Funcionário'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </nav>
