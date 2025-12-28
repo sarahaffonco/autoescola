@@ -11,7 +11,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
             </div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Bem-vindo de volta!</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Bem-vindo(a)</h1>
             <p class="text-gray-600">Entre com suas credenciais</p>
         </div>
 
@@ -48,7 +48,8 @@
             <div class="mt-6 text-center">
                 <p class="text-sm text-gray-600">
                     Não tem uma conta? 
-                    <a href="{% url 'register' %}" class="text-primary hover:underline font-medium">
+                    <!-- Mude esta linha: -->
+                    <a href="{% url 'choice' %}" class="text-primary hover:underline font-medium">
                         Cadastre-se
                     </a>
                 </p>
