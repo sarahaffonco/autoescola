@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Aluno - AutoEscola{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 pt-20 pb-12">
+    <div class="container mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8 animate-fade-in">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                Bem-vindo, {{ user.full_name }}! 🚗
+            </h1>
+            <p class="text-gray-600">
+                Acompanhe seu progresso e próximas aulas
+            </p>
+        </div>
+
+        <!-- Progress Banner -->
+        <div class="mb-8 rounded-2xl gradient-hero p-6 text-white">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold mb-1">Progresso para CNH - Categoria B</h2>
+                    <p class="text-white/80">
+                        {{ total_hours }} de {{ required_hours }} horas práticas obrigatórias completadas
+                    </p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-3xl font-bold">{{ progress_percentage|floatformat:0 }}%</p>
+                        <p class="text-sm text-white/80">Completo</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="h-3 w-full rounded-full bg-white/20">
+                    <div class="h-full rounded-full bg-white transition-all duration-1000"
+                         style="width: {{ progress_percentage }}%"></div>
+                </div>
+                <div class="flex justify-between mt-2 text-sm text-white/80">
+                    <span>0h</span>
+                    <span>20h (mínimo CONTRAN)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                        <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.upcoming_lessons }}</h3>
+                <p class="text-sm text-gray-600">Aulas Agendadas</p>
+                <p class="text-xs text-gray-500 mt-1">Próximos 7 dias</p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100">
+                        <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.total_hours }}h</h3>
+                <p class="text-sm text-gray-600">Horas Completadas</p>
+                <p class="text-xs text-gray-500 mt-1">Faltam {{ stats.hours_left }}h</p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
+                        <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.completed_lessons_count }}</h3>
+                <p class="text-sm text-gray-600">Aulas Realizadas</p>
+                <p class="text-xs text-gray-500 mt-1">Total</p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100">
+                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.average_score }}</h3>
+                <p class="text-sm text-gray-600">Pontuação Média</p>
+                <p class="text-xs text-gray-500 mt-1">De 10 pontos</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <!-- Upcoming Lessons -->
+            <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-card">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Próximas Aulas</h2>
+                        <p class="text-sm text-gray-600">Suas aulas agendadas</p>
+                    </div>
+                    <a href="{% url 'agendamento' %}" class="px-4 py-2 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all text-sm">
+                        Agendar Nova
+                    </a>
+                </div>
+
+                <div class="space-y-4">
+                    {% for lesson in upcoming_lessons %}
+                    <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
+                                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">{{ lesson.date|date:"d/m/Y" }}</p>
+                                <p class="text-sm text-gray-600">
+                                    {{ lesson.time|time:"H:i" }} • {{ lesson.instructor.full_name }}
+                                </p>
+                            </div>
+                        </div>
+                        <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-primary">
+                            Prática
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-center py-8 text-gray-500">Nenhuma aula agendada</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Lesson History -->            
+             <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-card">
+                <div class="flex items-center gap-2 mb-6">
+                    <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    <h2 class="text-xl font-bold text-gray-900">Histórico de Aulas</h2>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Data</th>
+                                <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Horário</th>
+                                <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Instrutor</th>
+                                <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Duração</th>
+                                <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Avaliação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lesson in completed_lessons %}
+                            <tr class="border-b border-gray-100 last:border-0">
+                                <td class="py-3 px-4 text-sm text-gray-900">{{ lesson.date|date:"d/m/Y" }}</td>
+                                <td class="py-3 px-4 text-sm text-gray-900">{{ lesson.time|time:"H:i" }}</td>
+                                <td class="py-3 px-4 text-sm text-gray-900">{{ lesson.instructor.full_name }}</td>
+                                <td class="py-3 px-4 text-sm text-gray-900">{{ lesson.duration }} min</td>
+                                <td class="py-3 px-4">
+                                    <span class="rounded-full px-3 py-1 text-xs font-medium 
+                                        {% if lesson.score == 'Excelente' %}bg-green-100 text-green-700
+                                        {% elif lesson.score == 'Bom' %}bg-blue-100 text-blue-700
+                                        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                                        {{ lesson.score|default:"--" }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-gray-500">Nenhuma aula completada ainda</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
