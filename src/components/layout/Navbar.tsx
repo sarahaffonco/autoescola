@@ -1,5 +1,4 @@
-import { NavLink } from "react-router-dom";
-import { Car, Calendar, GraduationCap, LogOut, User } from "lucide-react";
+import { Car, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,12 +11,6 @@ import {
 
 const Navbar = () => {
   const { signOut, userRole } = useAuth();
-  
-  const navItems = [
-    { to: "/", label: "Instrutor", icon: Car },
-    { to: "/aluno", label: "Aluno", icon: GraduationCap },
-    { to: "/agendamento", label: "Agendar", icon: Calendar },
-  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -34,25 +27,6 @@ const Navbar = () => {
             <span className="font-bold text-xl text-foreground">AutoEscola</span>
           </div>
 
-          <div className="flex items-center gap-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-card"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`
-                }
-              >
-                <item.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </NavLink>
-            ))}
-          </div>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -64,7 +38,10 @@ const Navbar = () => {
                 {userRole === 'instrutor' ? 'Instrutor' : 'Funcionário'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+              <DropdownMenuItem 
+                onClick={handleSignOut} 
+                className="text-destructive focus:text-destructive cursor-pointer"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair
               </DropdownMenuItem>

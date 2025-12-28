@@ -261,6 +261,7 @@
                             </label>
                             <input type="text" 
                                    name="address_number" 
+                                   value="{{ form.address_number.value|default:'' }}"
                                    id="id_address_number" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
@@ -272,6 +273,7 @@
                             </label>
                             <input type="text" 
                                    name="address_complement" 
+                                   value="{{ form.id_address_complement.value|default:'' }}"
                                    id="id_address_complement"
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
                         </div>
@@ -298,6 +300,7 @@
                             <input type="text" 
                                    name="cnh" 
                                    id="id_cnh" 
+                                   value="{{ form.cnh.value|default:'' }}"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                                    placeholder="Digite o número da CNH">
@@ -311,6 +314,7 @@
                             </label>
                             <input type="date" 
                                    name="cnh_emission_date" 
+                                   value="{{ form.cnh_emission_date.value|default:'' }}"
                                    id="id_cnh_emission_date" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
@@ -324,6 +328,7 @@
                             <input type="text" 
                                    name="credential" 
                                    id="id_credential" 
+                                   value="{{ form.credential.value|default:'' }}"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                                    placeholder="Número da credencial">
