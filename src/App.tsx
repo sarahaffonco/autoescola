@@ -48,9 +48,6 @@ function AppRoutes() {
       {user && <Navbar />}
       <Routes>
         <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
-        <Route path="/" element={<ProtectedRoute><Instrutor /></ProtectedRoute>} />
-        <Route path="/aluno" element={<ProtectedRoute><Aluno /></ProtectedRoute>} />
-        <Route path="/agendamento" element={<ProtectedRoute><Agendamento /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
