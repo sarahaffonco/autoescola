@@ -12,6 +12,7 @@ from .forms import (
     EmployeeRegistrationForm,
     StudentEditForm, 
     InstructorEditForm, 
+    InstructorPersonalEditForm,
     EmployeeEditForm,
     StudentProfile,         
     InstructorProfile,      
@@ -269,15 +270,47 @@ def edit_profile_view(request):
             template = 'accounts/edit_student.html'
             
     elif role == 'instrutor':
+        # Para instrutores, usa o formulário simplificado de dados pessoais
         if hasattr(user, 'instructorprofile'):
-            form_class = InstructorEditForm
-            instance = user.instructorprofile
-            template = 'accounts/edit_instructor.html'
+            profile = user.instructorprofile
         else:
-            # Cria um perfil vazio se não existir
-            instance = InstructorProfile(user=user)
-            form_class = InstructorEditForm
-            template = 'accounts/edit_instructor.html'
+            profile = None
+        
+        # 2. Tratamento do GET (Carregar Formulário)
+        if request.method == 'GET':
+            form = InstructorPersonalEditForm(user=user, profile=profile)
+            html = render_to_string('accounts/edit_instructor_personal.html', {
+                'form': form, 
+                'user': user,
+                'profile': profile
+            }, request=request)
+            return HttpResponse(html)
+        
+        # 3. Tratamento do POST (Salvar Dados)
+        elif request.method == 'POST':
+            form = InstructorPersonalEditForm(request.POST, request.FILES, user=user, profile=profile)
+            
+            try:
+                if form.is_valid():
+                    form.save()
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Dados atualizados com sucesso!'
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Por favor, corrija os erros abaixo.',
+                        'errors': form.errors
+                    })
+                    
+            except Exception as e:
+                print(f"Erro ao salvar perfil: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Erro ao salvar: {str(e)}'
+                }, status=500)
             
     elif role == 'funcionario':
         if hasattr(user, 'employeeprofile'):
@@ -296,54 +329,56 @@ def edit_profile_view(request):
             'message': 'Tipo de usuário não reconhecido.'
         }, status=400)
 
-    # 2. Tratamento do GET (Carregar Formulário)
-    if request.method == 'GET':
-        form = form_class(instance=instance)
-        
-        # Preenche campos básicos do User se o perfil for novo
-        if not instance.pk:  # Se for um perfil novo/não salvo
-            form.initial = {
-                'full_name': user.full_name or user.username,
-                'email': user.email,
-                'phone': user.phone or '',
-            }
-        
-        html = render_to_string(template, {'form': form, 'user': user}, request=request)
-        return HttpResponse(html)
+    # Para aluno e funcionário (fluxo original)
+    if role in ['aluno', 'funcionario']:
+        # 2. Tratamento do GET (Carregar Formulário)
+        if request.method == 'GET':
+            form = form_class(instance=instance)
+            
+            # Preenche campos básicos do User se o perfil for novo
+            if not instance.pk:  # Se for um perfil novo/não salvo
+                form.initial = {
+                    'full_name': user.full_name or user.username,
+                    'email': user.email,
+                    'phone': user.phone or '',
+                }
+            
+            html = render_to_string(template, {'form': form, 'user': user}, request=request)
+            return HttpResponse(html)
 
-    # 3. Tratamento do POST (Salvar Dados)
-    elif request.method == 'POST':
-        form = form_class(request.POST, request.FILES, instance=instance)
-        
-        try:
-            if form.is_valid():
-                profile = form.save(commit=False)
-                profile.user = user  # Garante a relação
-                profile.save()
-                
-                # Sincroniza o e-mail com o modelo User
-                if 'email' in form.cleaned_data:
-                    user.email = form.cleaned_data['email']
-                if 'full_name' in form.cleaned_data:
-                    user.full_name = form.cleaned_data['full_name']
-                if 'phone' in form.cleaned_data:
-                    user.phone = form.cleaned_data['phone']
-                user.save()
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Cadastro atualizado com sucesso!'
-                })
-            else:
+        # 3. Tratamento do POST (Salvar Dados)
+        elif request.method == 'POST':
+            form = form_class(request.POST, request.FILES, instance=instance)
+            
+            try:
+                if form.is_valid():
+                    profile = form.save(commit=False)
+                    profile.user = user  # Garante a relação
+                    profile.save()
+                    
+                    # Sincroniza o e-mail com o modelo User
+                    if 'email' in form.cleaned_data:
+                        user.email = form.cleaned_data['email']
+                    if 'full_name' in form.cleaned_data:
+                        user.full_name = form.cleaned_data['full_name']
+                    if 'phone' in form.cleaned_data:
+                        user.phone = form.cleaned_data['phone']
+                    user.save()
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Cadastro atualizado com sucesso!'
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Por favor, corrija os erros abaixo.',
+                        'errors': form.errors
+                    })
+                    
+            except Exception as e:
+                print(f"Erro ao salvar perfil: {str(e)}")
                 return JsonResponse({
                     'success': False,
-                    'message': 'Por favor, corrija os erros abaixo.',
-                    'errors': form.errors
-                })
-                
-        except Exception as e:
-            print(f"Erro ao salvar perfil: {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'message': f'Erro ao salvar: {str(e)}'
-            }, status=500)
+                    'message': f'Erro ao salvar: {str(e)}'
+                }, status=500)

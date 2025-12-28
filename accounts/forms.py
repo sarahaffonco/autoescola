@@ -734,6 +734,111 @@ class InstructorEditForm(forms.ModelForm):
                     field.widget.attrs['class'] = 'form-control'
 
 
+class InstructorPersonalEditForm(forms.Form):
+    """Formulário simplificado para edição de dados pessoais do instrutor"""
+    username = forms.CharField(
+        max_length=150,
+        required=True,
+        label='Nome de Usuário',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Nome de usuário',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
+    
+    email = forms.EmailField(
+        required=True,
+        label='Email',
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'seu@email.com',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
+    
+    password = forms.CharField(
+        required=False,
+        label='Nova Senha',
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Deixe em branco para manter a senha atual',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        }),
+        help_text='Deixe em branco se não quiser alterar a senha'
+    )
+    
+    password_confirm = forms.CharField(
+        required=False,
+        label='Confirme a Nova Senha',
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Confirme a nova senha',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
+    
+    photo = forms.ImageField(
+        required=False,
+        label='Foto 3x4',
+        help_text='JPG, JPEG ou PNG (máximo 5MB)',
+        widget=forms.FileInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all',
+            'accept': 'image/jpeg,image/jpg,image/png'
+        })
+    )
+    
+    def __init__(self, *args, user=None, profile=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.profile = profile
+        
+        # Preenche os valores iniciais
+        if user:
+            self.fields['username'].initial = user.username
+            self.fields['email'].initial = user.email
+    
+    def clean_username(self):
+        """Valida que o username é único"""
+        username = self.cleaned_data.get('username')
+        if username and User.objects.filter(username=username).exclude(pk=self.user.pk).exists():
+            raise ValidationError('Este nome de usuário já está em uso')
+        return username
+    
+    def clean_email(self):
+        """Valida que o email é único"""
+        email = self.cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exclude(pk=self.user.pk).exists():
+            raise ValidationError('Este email já está cadastrado')
+        return email
+    
+    def clean(self):
+        """Valida que as senhas coincidem"""
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        password_confirm = cleaned_data.get('password_confirm')
+        
+        if password and password != password_confirm:
+            raise ValidationError('As senhas não coincidem')
+        
+        return cleaned_data
+    
+    def save(self):
+        """Salva as alterações no User e no Profile"""
+        # Atualiza o User
+        self.user.username = self.cleaned_data['username']
+        self.user.email = self.cleaned_data['email']
+        
+        # Atualiza a senha se fornecida
+        if self.cleaned_data.get('password'):
+            self.user.set_password(self.cleaned_data['password'])
+        
+        self.user.save()
+        
+        # Atualiza a foto no profile se fornecida
+        if self.cleaned_data.get('photo') and self.profile:
+            self.profile.photo = self.cleaned_data['photo']
+            self.profile.save()
+        
+        return self.user
+
+
 class EmployeeEditForm(forms.ModelForm):
     """Formulário para edição de funcionário"""
     
