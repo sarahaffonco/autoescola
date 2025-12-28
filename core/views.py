@@ -114,6 +114,7 @@ def aluno_dashboard(request):
 def agendamento(request):
     """Lesson scheduling view"""
     from lessons.forms import LessonForm
+    from datetime import date
     
     if request.method == 'POST':
         form = LessonForm(request.POST)
@@ -138,6 +139,7 @@ def agendamento(request):
             'Zona Sul - Rua das Flores, 456',
             'Zona Norte - Av. Brasil, 789',
         ],
+        'today': date.today(),
     }
     
     return render(request, 'core/agendamento.html', context)
