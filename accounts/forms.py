@@ -439,7 +439,6 @@ class InstructorRegistrationForm(BaseRegistrationForm):
                 support_document_1=self.cleaned_data.get('support_document_1'),
                 support_document_2=self.cleaned_data.get('support_document_2'),
                 status='pendente',  # Aguarda aprovação
-                is_active=True,
                 rating=0.0,
                 total_students=0,
                 total_lessons=0
@@ -519,7 +518,7 @@ class EmployeeRegistrationForm(BaseRegistrationForm):
 
 
 class UserLoginForm(forms.Form):
-    """Formulário de login"""
+    """Formulário de login com validações específicas"""
     
     email = forms.EmailField(
         required=True,
@@ -533,28 +532,56 @@ class UserLoginForm(forms.Form):
         label='Senha'
     )
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove a validação automática do Django para poder customizar
+        self.error_messages = {
+            'email_not_found': 'Email não encontrado. Verifique se digitou corretamente.',
+            'incorrect_password': 'Senha incorreta. Tente novamente.',
+            'inactive_account': 'Sua conta está inativa. Entre em contato com o administrador.',
+        }
+    
+    def clean_email(self):
+        """Valida se o email existe no sistema"""
+        email = self.cleaned_data.get('email')
+        
+        if email:
+            try:
+                user = User.objects.get(email=email)
+                
+                # Verifica se o usuário está ativo
+                if not user.is_active:
+                    raise ValidationError(self.error_messages['inactive_account'])
+                
+            except User.DoesNotExist:
+                # Salva o erro no campo email
+                self.add_error('email', self.error_messages['email_not_found'])
+        
+        return email
+    
     def clean(self):
+        """Validação cruzada de email e senha"""
         cleaned_data = super().clean()
         email = cleaned_data.get('email')
         password = cleaned_data.get('password')
         
+        # Se o email não existe, já paramos aqui
+        if self.errors.get('email'):
+            return cleaned_data
+        
+        # Se temos email e senha, valida a senha
         if email and password:
-            # Tenta encontrar o usuário pelo email
             try:
                 user = User.objects.get(email=email)
                 
                 # Verifica a senha
                 if not user.check_password(password):
-                    raise ValidationError('Email ou senha incorretos')
-                
-                # Verifica se o usuário está ativo
-                if not user.is_active:
-                    raise ValidationError('Sua conta está inativa. Entre em contato com o administrador.')
-                
-                cleaned_data['user'] = user
+                    # Adiciona erro específico no campo password
+                    self.add_error('password', self.error_messages['incorrect_password'])
                 
             except User.DoesNotExist:
-                raise ValidationError('Email ou senha incorretos')
+                # Isso não deveria acontecer se clean_email() passou
+                pass
         
         return cleaned_data
 

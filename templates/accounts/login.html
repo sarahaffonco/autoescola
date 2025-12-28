@@ -6,9 +6,11 @@
 <div class="min-h-screen flex items-center justify-center py-12 px-4">
     <div class="max-w-md w-full">
         <div class="text-center mb-8">
-            <div class="w-16 h-16 mx-auto rounded-xl gradient-primary flex items-center justify-center shadow-glow mb-4">
+            <div
+                class="w-16 h-16 mx-auto rounded-xl gradient-primary flex items-center justify-center shadow-glow mb-4">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
             </div>
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Bem-vindo(a)</h1>
@@ -16,39 +18,74 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-card p-8">
-            <form method="post" class="space-y-6">
+            {% if messages %}
+            {% for message in messages %}
+            <div
+                class="p-4 mb-4 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            <form method="post" class="space-y-6" novalidate>
                 {% csrf_token %}
-                
+
+                <!-- Campo Email -->
                 <div>
                     <label for="id_email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <input type="email" 
                            name="email" 
                            id="id_email" 
+                           value="{{ form.email.value|default:'' }}"
                            required
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                           class="w-full px-4 py-3 rounded-lg border {% if form.email.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                            placeholder="seu@email.com">
+                    {% if form.email.errors %}
+                    <div class="mt-2 space-y-1">
+                        {% for error in form.email.errors %}
+                        <p class="text-sm text-red-600 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
+                <!-- Campo Senha -->
                 <div>
                     <label for="id_password" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <input type="password" 
                            name="password" 
                            id="id_password" 
                            required
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                           class="w-full px-4 py-3 rounded-lg border {% if form.password.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                            placeholder="••••••••">
+                    {% if form.password.errors %}
+                    <div class="mt-2 space-y-1">
+                        {% for error in form.password.errors %}
+                        <p class="text-sm text-red-600 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
-                <button type="submit" 
-                        class="w-full py-3 px-4 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card">
+                <button type="submit"
+                    class="w-full py-3 px-4 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card">
                     Entrar
                 </button>
             </form>
 
             <div class="mt-6 text-center">
                 <p class="text-sm text-gray-600">
-                    Não tem uma conta? 
-                    <!-- Mude esta linha: -->
+                    Não tem uma conta?
                     <a href="{% url 'choice' %}" class="text-primary hover:underline font-medium">
                         Cadastre-se
                     </a>
@@ -57,4 +94,35 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Limpa erros ao começar a digitar
+    const emailInput = document.getElementById('id_email');
+    const passwordInput = document.getElementById('id_password');
+    
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            const errorDiv = this.parentNode.querySelector('.text-red-600');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        });
+    }
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            const errorDiv = this.parentNode.querySelector('.text-red-600');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
 {% endblock %}

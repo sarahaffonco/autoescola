@@ -54,6 +54,7 @@
                             </label>
                             <input type="text" 
                                    name="username" 
+                                   value="{{ form.username.value|default:'' }}"
                                    id="id_username" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
@@ -70,6 +71,7 @@
                             </label>
                             <input type="email" 
                                    name="email" 
+                                   value="{{ form.email.value|default:'' }}"
                                    id="id_email" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
@@ -132,6 +134,7 @@
                             </label>
                             <input type="text" 
                                    name="full_name" 
+                                   value="{{ form.full_name.value|default:'' }}"
                                    id="id_full_name" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
@@ -145,6 +148,7 @@
                             </label>
                             <input type="text" 
                                    name="cpf" 
+                                   value="{{ form.cpf.value|default:'' }}"
                                    id="id_cpf" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
@@ -163,6 +167,7 @@
                             </label>
                             <input type="text" 
                                    name="rg" 
+                                   value="{{ form.rg.value|default:'' }}"
                                    id="id_rg" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
@@ -181,6 +186,7 @@
                             </label>
                             <input type="tel" 
                                    name="phone" 
+                                   value="{{ form.phone.value|default:'' }}"
                                    id="id_phone" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
@@ -194,6 +200,7 @@
                             </label>
                             <input type="date" 
                                    name="birth_date" 
+                                   value="{{ form.birth_date.value|default:'' }}"
                                    id="id_birth_date" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
@@ -221,6 +228,7 @@
                             </label>
                             <input type="text" 
                                    name="cep" 
+                                   value="{{ form.cep.value|default:'' }}"
                                    id="id_cep" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
@@ -750,5 +758,46 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Máscaras e validações inicializadas com sucesso!');
 });
+// ============================================
+    // 5. VALIDAÇÃO DE IDADE MÍNIMA (18 anos)
+    // ============================================
+    const birthDateInput = document.getElementById('id_birth_date');
+    if (birthDateInput) {
+        birthDateInput.addEventListener('change', function() {
+            if (this.value) {
+                const birthDate = new Date(this.value);
+                const today = new Date();
+                const age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                const actualAge = (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) 
+                    ? age - 1 
+                    : age;
+                
+                // Valida se é maior de 18 anos
+                if (actualAge >= 18) {
+                    this.classList.remove('border-red-500');
+                    this.classList.add('border-green-500');
+                    
+                    // Remove mensagem de erro se existir
+                    const errorMsg = this.parentNode.querySelector('.age-error');
+                    if (errorMsg) errorMsg.remove();
+                } else {
+                    this.classList.remove('border-green-500');
+                    this.classList.add('border-red-500');
+                    
+                    // Adiciona mensagem de erro
+                    let errorMsg = this.parentNode.querySelector('.age-error');
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('p');
+                        errorMsg.className = 'mt-1 text-sm text-red-600 age-error';
+                        this.parentNode.appendChild(errorMsg);
+                    }
+                    errorMsg.textContent = `Idade mínima de 18 anos. Você tem ${actualAge} anos.`;
+                }
+            }
+        });
+    }
+    
 </script>
 {% endblock %}
