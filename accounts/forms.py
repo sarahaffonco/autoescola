@@ -703,24 +703,29 @@ class InstructorEditForm(forms.ModelForm):
         model = InstructorProfile
         fields = [
             'full_name', 'email', 'phone', 'birth_date',
-            'cpf', 'rg', 'cep', 'address', 'address_number', 'address_complement',
-            'photo', 'cnh', 'cnh_emission_date', 'credential', 'cnh_document'
+            'cep', 'address', 'address_number', 'address_complement',
+            'photo'  # Apenas a foto pode ser alterada
         ]
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
-            'cnh_emission_date': forms.DateInput(attrs={'type': 'date'}),
             'photo': forms.FileInput(),
-            'cnh_document': forms.FileInput(),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Campos somente leitura
-        readonly_fields = ['cpf', 'credential']
-        for field_name in readonly_fields:
-            if field_name in self.fields:
-                self.fields[field_name].widget.attrs['readonly'] = True
-                self.fields[field_name].widget.attrs['class'] = 'bg-gray-100 cursor-not-allowed'
+        
+        # Adiciona classes CSS aos campos
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        
+        # Torna campos obrigatórios
+        self.fields['full_name'].required = True
+        self.fields['email'].required = True
+        self.fields['phone'].required = True
+        self.fields['birth_date'].required = True
+        self.fields['cep'].required = True
+        self.fields['address'].required = True
+        self.fields['address_number'].required = True
         
         # Adiciona classes CSS
         for field_name, field in self.fields.items():
