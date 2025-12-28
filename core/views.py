@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from datetime import date, timedelta
-from lessons.models import Lesson, StudentProgress
+from lessons.models import Lesson
 
 
 @login_required
@@ -86,9 +86,6 @@ def aluno_dashboard(request):
     total_hours = completed_lessons.count() * 50 // 60  # Convert to hours
     required_hours = 20
     
-    # Get skills progress
-    skills = StudentProgress.objects.filter(student=request.user)
-    
     stats = {
         'upcoming_lessons': upcoming_lessons.count(),
         'total_hours': total_hours,
@@ -101,7 +98,7 @@ def aluno_dashboard(request):
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
         'completed_lessons': completed_lessons,
-        'skills': skills,
+        #'skills': skills,
         'total_hours': total_hours,
         'required_hours': required_hours,
         'progress_percentage': min(100, (total_hours / required_hours) * 100),
