@@ -588,6 +588,7 @@ class UserLoginForm(forms.Form):
 
 # Formulário simplificado para a view genérica (não será mais usado diretamente)
 class UserRegistrationForm(BaseRegistrationForm):
+
     """Formulário genérico para registro (mantido para compatibilidade)"""
     
     role = forms.ChoiceField(
@@ -666,3 +667,92 @@ class UserRegistrationForm(BaseRegistrationForm):
                 )
         
         return user
+    
+class StudentEditForm(forms.ModelForm):
+    """Formulário para edição de aluno"""
+    
+    class Meta:
+        model = StudentProfile
+        fields = [
+            'full_name', 'email', 'phone', 'birth_date',
+            'cpf', 'rg', 'cep', 'address', 'address_number', 'address_complement',
+            'photo'
+        ]
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'photo': forms.FileInput(),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Torna o CPF somente leitura (não pode ser alterado)
+        self.fields['cpf'].widget.attrs['readonly'] = True
+        self.fields['cpf'].widget.attrs['class'] = 'bg-gray-100 cursor-not-allowed'
+        
+        # Adiciona classes CSS
+        for field_name, field in self.fields.items():
+            if field.widget:
+                if 'class' not in field.widget.attrs:
+                    field.widget.attrs['class'] = 'form-control'
+
+
+class InstructorEditForm(forms.ModelForm):
+    """Formulário para edição de instrutor"""
+    
+    class Meta:
+        model = InstructorProfile
+        fields = [
+            'full_name', 'email', 'phone', 'birth_date',
+            'cpf', 'rg', 'cep', 'address', 'address_number', 'address_complement',
+            'photo', 'cnh', 'cnh_emission_date', 'credential', 'cnh_document'
+        ]
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'cnh_emission_date': forms.DateInput(attrs={'type': 'date'}),
+            'photo': forms.FileInput(),
+            'cnh_document': forms.FileInput(),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Campos somente leitura
+        readonly_fields = ['cpf', 'credential']
+        for field_name in readonly_fields:
+            if field_name in self.fields:
+                self.fields[field_name].widget.attrs['readonly'] = True
+                self.fields[field_name].widget.attrs['class'] = 'bg-gray-100 cursor-not-allowed'
+        
+        # Adiciona classes CSS
+        for field_name, field in self.fields.items():
+            if field.widget:
+                if 'class' not in field.widget.attrs:
+                    field.widget.attrs['class'] = 'form-control'
+
+
+class EmployeeEditForm(forms.ModelForm):
+    """Formulário para edição de funcionário"""
+    
+    class Meta:
+        model = EmployeeProfile
+        fields = [
+            'full_name', 'email', 'phone', 'birth_date',
+            'cpf', 'rg', 'cep', 'address', 'address_number', 'address_complement',
+            'photo', 'department', 'position'
+        ]
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'photo': forms.FileInput(),
+            'department': forms.Select(),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # CPF somente leitura
+        self.fields['cpf'].widget.attrs['readonly'] = True
+        self.fields['cpf'].widget.attrs['class'] = 'bg-gray-100 cursor-not-allowed'
+        
+        # Adiciona classes CSS
+        for field_name, field in self.fields.items():
+            if field.widget:
+                if 'class' not in field.widget.attrs:
+                    field.widget.attrs['class'] = 'form-control'
