@@ -16,14 +16,6 @@ const completedLessons = [
   { date: "20/12/2024", time: "14:00", instructor: "Carlos Mendes", duration: "50 min", score: "Regular" },
 ];
 
-const skills = [
-  { name: "Baliza", progress: 85, status: "Avançado" },
-  { name: "Estacionamento", progress: 70, status: "Intermediário" },
-  { name: "Direção em via", progress: 90, status: "Avançado" },
-  { name: "Conversões", progress: 60, status: "Intermediário" },
-  { name: "Ladeira", progress: 75, status: "Intermediário" },
-];
-
 const Aluno = () => {
   const totalHours = 12;
   const requiredHours = 20;
@@ -101,14 +93,6 @@ const Aluno = () => {
               variant="success"
             />
           </div>
-          <div className="animate-fade-in" style={{ animationDelay: "0.5s" }}>
-            <StatCard
-              title="Pontuação Média"
-              value="8.5"
-              subtitle="De 10 pontos"
-              icon={Target}
-              variant="warning"
-            />
           </div>
         </div>
 

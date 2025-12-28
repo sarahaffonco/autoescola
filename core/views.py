@@ -91,14 +91,12 @@ def aluno_dashboard(request):
         'total_hours': total_hours,
         'hours_left': max(0, required_hours - total_hours),
         'completed_lessons_count': completed_lessons.count(),
-        'average_score': 8.5,  # Would be calculated from actual scores
     }
     
     context = {
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
         'completed_lessons': completed_lessons,
-        #'skills': skills,
         'total_hours': total_hours,
         'required_hours': required_hours,
         'progress_percentage': min(100, (total_hours / required_hours) * 100),
