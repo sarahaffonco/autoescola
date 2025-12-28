@@ -2,13 +2,19 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse, HttpResponse  # ← ADICIONE HttpResponse
+from django.template.loader import render_to_string  # ← ADICIONE render_to_string
+
 from .forms import (
     UserLoginForm, 
     StudentRegistrationForm, 
     InstructorRegistrationForm, 
-    EmployeeRegistrationForm
+    EmployeeRegistrationForm,
+    StudentEditForm, InstructorEditForm, EmployeeEditForm  # ← Já está aqui
 )
 from .models import User
+
+
 def login_view(request):
     """Login view com validações específicas"""
     if request.user.is_authenticated:
@@ -230,3 +236,77 @@ def profile_view(request):
     template_name = f'accounts/profile_{request.user.role}.html'
     
     return render(request, template_name, context)
+
+
+# ============================================
+# VIEWS PARA EDITAR PERFIL 
+# ============================================
+
+
+
+@login_required
+def edit_profile_view(request):
+    """View para edição de perfil (AJAX)"""
+    if request.method == 'GET':
+        # Retorna o formulário apropriado
+        user = request.user
+        profile = user.get_profile()
+        
+        if user.role == 'aluno' and hasattr(user, 'studentprofile'):
+            form = StudentEditForm(instance=user.studentprofile)
+            template = 'accounts/edit_student.html'
+        elif user.role == 'instrutor' and hasattr(user, 'instructorprofile'):
+            form = InstructorEditForm(instance=user.instructorprofile)
+            template = 'accounts/edit_instructor.html'
+        elif user.role == 'funcionario' and hasattr(user, 'employeeprofile'):
+            form = EmployeeEditForm(instance=user.employeeprofile)
+            template = 'accounts/edit_employee.html'
+        else:
+            return JsonResponse({'error': 'Perfil não encontrado'}, status=404)
+        
+        # Renderiza o template apropriado
+        html = render_to_string(template, {'form': form, 'user': user}, request=request)
+        return HttpResponse(html)
+    
+    elif request.method == 'POST':
+        # Processa o formulário de edição
+        user = request.user
+        profile = user.get_profile()
+        
+        try:
+            if user.role == 'aluno' and hasattr(user, 'studentprofile'):
+                form = StudentEditForm(request.POST, request.FILES, instance=user.studentprofile)
+            elif user.role == 'instrutor' and hasattr(user, 'instructorprofile'):
+                form = InstructorEditForm(request.POST, request.FILES, instance=user.instructorprofile)
+            elif user.role == 'funcionario' and hasattr(user, 'employeeprofile'):
+                form = EmployeeEditForm(request.POST, request.FILES, instance=user.employeeprofile)
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Perfil não encontrado'
+                }, status=404)
+            
+            if form.is_valid():
+                form.save()
+                
+                # Atualiza também o usuário se necessário
+                if 'email' in form.cleaned_data:
+                    user.email = form.cleaned_data['email']
+                    user.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Cadastro atualizado com sucesso!'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Por favor, corrija os erros abaixo.',
+                    'errors': form.errors
+                })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro ao atualizar cadastro: {str(e)}'
+            }, status=500)
