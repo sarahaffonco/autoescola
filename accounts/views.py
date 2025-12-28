@@ -2,15 +2,21 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse  # ← ADICIONE HttpResponse
-from django.template.loader import render_to_string  # ← ADICIONE render_to_string
+from django.http import JsonResponse, HttpResponse 
+from django.template.loader import render_to_string 
 
 from .forms import (
     UserLoginForm, 
     StudentRegistrationForm, 
     InstructorRegistrationForm, 
     EmployeeRegistrationForm,
-    StudentEditForm, InstructorEditForm, EmployeeEditForm  # ← Já está aqui
+    StudentEditForm, 
+    InstructorEditForm, 
+    InstructorPersonalEditForm,
+    EmployeeEditForm,
+    StudentProfile,         
+    InstructorProfile,      
+    EmployeeProfile            
 )
 from .models import User
 
@@ -241,72 +247,138 @@ def profile_view(request):
 # ============================================
 # VIEWS PARA EDITAR PERFIL 
 # ============================================
-
-
-
 @login_required
 def edit_profile_view(request):
-    """View para edição de perfil (AJAX)"""
-    if request.method == 'GET':
-        # Retorna o formulário apropriado
-        user = request.user
-        profile = user.get_profile()
-        
-        if user.role == 'aluno' and hasattr(user, 'studentprofile'):
-            form = StudentEditForm(instance=user.studentprofile)
+    """View centralizada para edição de perfil via AJAX"""
+    user = request.user
+    role = str(user.role).lower() if user.role else ""
+    
+    form_class = None
+    instance = None
+    template = None
+
+    # 1. Identificação do Perfil
+    if role == 'aluno':
+        if hasattr(user, 'studentprofile'):
+            form_class = StudentEditForm
+            instance = user.studentprofile
             template = 'accounts/edit_student.html'
-        elif user.role == 'instrutor' and hasattr(user, 'instructorprofile'):
-            form = InstructorEditForm(instance=user.instructorprofile)
-            template = 'accounts/edit_instructor.html'
-        elif user.role == 'funcionario' and hasattr(user, 'employeeprofile'):
-            form = EmployeeEditForm(instance=user.employeeprofile)
+        else:
+            # Cria um perfil vazio se não existir
+            instance = StudentProfile(user=user)
+            form_class = StudentEditForm
+            template = 'accounts/edit_student.html'
+            
+    elif role == 'instrutor':
+        # Para instrutores, usa o formulário simplificado de dados pessoais
+        if hasattr(user, 'instructorprofile'):
+            profile = user.instructorprofile
+        else:
+            profile = None
+        
+        # 2. Tratamento do GET (Carregar Formulário)
+        if request.method == 'GET':
+            form = InstructorPersonalEditForm(user=user, profile=profile)
+            html = render_to_string('accounts/edit_instructor_personal.html', {
+                'form': form, 
+                'user': user,
+                'profile': profile
+            }, request=request)
+            return HttpResponse(html)
+        
+        # 3. Tratamento do POST (Salvar Dados)
+        elif request.method == 'POST':
+            form = InstructorPersonalEditForm(request.POST, request.FILES, user=user, profile=profile)
+            
+            try:
+                if form.is_valid():
+                    form.save()
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Dados atualizados com sucesso!'
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Por favor, corrija os erros abaixo.',
+                        'errors': form.errors
+                    })
+                    
+            except Exception as e:
+                print(f"Erro ao salvar perfil: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Erro ao salvar: {str(e)}'
+                }, status=500)
+            
+    elif role == 'funcionario':
+        if hasattr(user, 'employeeprofile'):
+            form_class = EmployeeEditForm
+            instance = user.employeeprofile
             template = 'accounts/edit_employee.html'
         else:
-            return JsonResponse({'error': 'Perfil não encontrado'}, status=404)
-        
-        # Renderiza o template apropriado
-        html = render_to_string(template, {'form': form, 'user': user}, request=request)
-        return HttpResponse(html)
-    
-    elif request.method == 'POST':
-        # Processa o formulário de edição
-        user = request.user
-        profile = user.get_profile()
-        
-        try:
-            if user.role == 'aluno' and hasattr(user, 'studentprofile'):
-                form = StudentEditForm(request.POST, request.FILES, instance=user.studentprofile)
-            elif user.role == 'instrutor' and hasattr(user, 'instructorprofile'):
-                form = InstructorEditForm(request.POST, request.FILES, instance=user.instructorprofile)
-            elif user.role == 'funcionario' and hasattr(user, 'employeeprofile'):
-                form = EmployeeEditForm(request.POST, request.FILES, instance=user.employeeprofile)
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Perfil não encontrado'
-                }, status=404)
+            # Cria um perfil vazio se não existir
+            instance = EmployeeProfile(user=user)
+            form_class = EmployeeEditForm
+            template = 'accounts/edit_employee.html'
+    else:
+        # Se não tiver role definido
+        return JsonResponse({
+            'success': False, 
+            'message': 'Tipo de usuário não reconhecido.'
+        }, status=400)
+
+    # Para aluno e funcionário (fluxo original)
+    if role in ['aluno', 'funcionario']:
+        # 2. Tratamento do GET (Carregar Formulário)
+        if request.method == 'GET':
+            form = form_class(instance=instance)
             
-            if form.is_valid():
-                form.save()
-                
-                # Atualiza também o usuário se necessário
-                if 'email' in form.cleaned_data:
-                    user.email = form.cleaned_data['email']
+            # Preenche campos básicos do User se o perfil for novo
+            if not instance.pk:  # Se for um perfil novo/não salvo
+                form.initial = {
+                    'full_name': user.full_name or user.username,
+                    'email': user.email,
+                    'phone': user.phone or '',
+                }
+            
+            html = render_to_string(template, {'form': form, 'user': user}, request=request)
+            return HttpResponse(html)
+
+        # 3. Tratamento do POST (Salvar Dados)
+        elif request.method == 'POST':
+            form = form_class(request.POST, request.FILES, instance=instance)
+            
+            try:
+                if form.is_valid():
+                    profile = form.save(commit=False)
+                    profile.user = user  # Garante a relação
+                    profile.save()
+                    
+                    # Sincroniza o e-mail com o modelo User
+                    if 'email' in form.cleaned_data:
+                        user.email = form.cleaned_data['email']
+                    if 'full_name' in form.cleaned_data:
+                        user.full_name = form.cleaned_data['full_name']
+                    if 'phone' in form.cleaned_data:
+                        user.phone = form.cleaned_data['phone']
                     user.save()
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Cadastro atualizado com sucesso!'
-                })
-            else:
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Cadastro atualizado com sucesso!'
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Por favor, corrija os erros abaixo.',
+                        'errors': form.errors
+                    })
+                    
+            except Exception as e:
+                print(f"Erro ao salvar perfil: {str(e)}")
                 return JsonResponse({
                     'success': False,
-                    'message': 'Por favor, corrija os erros abaixo.',
-                    'errors': form.errors
-                })
-                
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'Erro ao atualizar cadastro: {str(e)}'
-            }, status=500)
+                    'message': f'Erro ao salvar: {str(e)}'
+                }, status=500)
