@@ -116,7 +116,8 @@
                     {% for day in week_data %}
                     <div class="flex-1 flex flex-col items-center gap-2">
                         <div class="w-full rounded-lg gradient-primary transition-all duration-500 hover:opacity-80"
-                            style="--bar-height: {{ day.count|default:0 }}%; height: var(--bar-height);">
+                            style="--bar-height: {{ day.count|default:1 }}0%;">
+                        </div>
                         <span class="text-xs text-gray-500">{{ day.day }}</span>
                     </div>
                     {% endfor %}

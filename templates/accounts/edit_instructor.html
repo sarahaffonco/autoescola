@@ -28,28 +28,24 @@
 
             <!-- CPF (somente leitura) -->
             <div>
-                <label for="id_cpf" class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
                     CPF *
                 </label>
-                <input type="text" 
-                       name="cpf" 
-                       value="{{ form.cpf.value|default:'' }}"
-                       id="edit_cpf" 
-                       readonly
-                       class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 cursor-not-allowed transition-all"
-                       placeholder="000.000.000-00">
+                <div class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50">
+                    <span class="text-gray-900">{{ form.instance.cpf|default:"Não informado" }}</span>
+                </div>
                 <p class="mt-1 text-sm text-gray-500">CPF não pode ser alterado</p>
             </div>
 
-            <!-- RG -->
+            <!-- RG (somente leitura) -->
             <div>
-                <label for="id_rg" class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
                     RG *
                 </label>
-                {% render_field form.rg class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="00.000.000-0" id="edit_rg" %}
-                {% if form.rg.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.rg.errors.0 }}</p>
-                {% endif %}
+                <div class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50">
+                    <span class="text-gray-900">{{ form.instance.rg|default:"Não informado" }}</span>
+                </div>
+                <p class="mt-1 text-sm text-gray-500">RG não pode ser alterado</p>
             </div>
 
             <!-- Email -->
@@ -79,7 +75,7 @@
                 <label for="id_birth_date" class="block text-sm font-medium text-gray-700 mb-2">
                     Data de Nascimento *
                 </label>
-                {% render_field form.birth_date class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" %}
+                {% render_field form.birth_date class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" type="date" %}
                 {% if form.birth_date.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ form.birth_date.errors.0 }}</p>
                 {% endif %}
@@ -146,67 +142,139 @@
         </div>
     </div>
 
-    <!-- Dados Profissionais -->
+    <!-- Informações da CNH (Somente Leitura) -->
     <div class="mb-8">
         <div class="flex items-center mb-6">
-            <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center mr-3">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
             </div>
-            <h2 class="text-xl font-bold text-gray-900">Dados Profissionais</h2>
+            <h2 class="text-xl font-bold text-gray-900">Dados da CNH</h2>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Departamento -->
+            <!-- Número da CNH (somente leitura) -->
             <div>
-                <label for="id_department" class="block text-sm font-medium text-gray-700 mb-2">
-                    Departamento *
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Número da CNH *
                 </label>
-                {% render_field form.department class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" %}
-                {% if form.department.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.department.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Cargo -->
-            <div>
-                <label for="id_position" class="block text-sm font-medium text-gray-700 mb-2">
-                    Cargo *
-                </label>
-                {% render_field form.position class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Seu cargo" %}
-                {% if form.position.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.position.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Foto -->
-            <div>
-                <label for="id_photo" class="block text-sm font-medium text-gray-700 mb-2">
-                    Foto 3x4
-                </label>
-                {% if form.instance.photo %}
-                <div class="mb-4">
-                    <p class="text-sm text-gray-600 mb-2">Foto atual:</p>
-                    <img src="{{ form.instance.photo.url }}" alt="Foto atual" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                <div class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50">
+                    <span class="text-gray-900">{{ form.instance.cnh|default:"Não informado" }}</span>
                 </div>
-                {% endif %}
+                <p class="mt-1 text-sm text-gray-500">Informação não editável</p>
+            </div>
+
+            <!-- Data de Emissão da CNH (somente leitura) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Data de Emissão da CNH *
+                </label>
+                <div class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50">
+                    <span class="text-gray-900">
+                        {% if form.instance.cnh_emission_date %}
+                            {{ form.instance.cnh_emission_date|date:"d/m/Y" }}
+                        {% else %}
+                            Não informada
+                        {% endif %}
+                    </span>
+                </div>
+                <p class="mt-1 text-sm text-gray-500">Informação não editável</p>
+            </div>
+
+            <!-- Credencial (somente leitura) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Credencial de Instrutor *
+                </label>
+                <div class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50">
+                    <span class="text-gray-900">{{ form.instance.credential|default:"Não informada" }}</span>
+                </div>
+                <p class="mt-1 text-sm text-gray-500">Informação não editável</p>
+            </div>
+
+            <!-- CNH Documento (somente visualização) -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    CNH (Frente e Verso)
+                </label>
                 
-                {% render_field form.photo class="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" %}
-                <p class="mt-1 text-sm text-gray-500">JPG, JPEG ou PNG (máximo 5MB)</p>
-                {% if form.photo.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.photo.errors.0 }}</p>
+                {% if form.instance.cnh_document %}
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-300">
+                    <p class="text-sm text-gray-600 mb-2">Documento atual:</p>
+                    <a href="{{ form.instance.cnh_document.url }}" 
+                       target="_blank" 
+                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                        <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        Visualizar CNH atual
+                    </a>
+                    <p class="mt-2 text-sm text-gray-500">Documento não pode ser alterado</p>
+                </div>
+                {% else %}
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-300">
+                    <p class="text-gray-500 italic">Nenhum documento de CNH cadastrado</p>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
+    <!-- Foto 3x4 -->
+    <div class="mb-8">
+        <div class="flex items-center mb-6">
+            <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center mr-3">
+                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900">Foto 3x4</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Foto atual (se existir) -->
+            {% if form.instance.photo %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Foto atual
+                </label>
+                <div class="space-y-4">
+                    <img src="{{ form.instance.photo.url }}" 
+                         alt="Foto atual" 
+                         class="w-32 h-32 object-cover rounded-lg border-2 border-gray-300">
+                    <div>
+                        <p class="text-sm text-gray-600">Para alterar a foto, faça upload de uma nova:</p>
+                        {% render_field form.photo class="mt-2 w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" %}
+                        {% if form.photo.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.photo.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Se não tiver foto -->
+            <div class="md:col-span-2">
+                <label for="id_photo" class="block text-sm font-medium text-gray-700 mb-2">
+                    Foto 3x4 *
+                </label>
+                {% render_field form.photo class="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" %}
+                <p class="mt-1 text-sm text-gray-500">JPG, JPEG ou PNG (máximo 5MB)</p>
+                {% if form.photo.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.photo.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Botões -->
     <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
-        <button type="button" id="cancelEditBtn" class="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all">
+        <button type="button" id="cancelEditBtn" class="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all">
             Cancelar
         </button>
-        <button type="submit" class="px-8 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card">
+        <button type="submit" class="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card">
             Salvar Alterações
         </button>
     </div>
@@ -225,5 +293,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Máscaras para campos
+    function applyMasks() {
+        // Telefone
+        const phoneField = document.getElementById('edit_phone');
+        if (phoneField) {
+            phoneField.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substring(0, 11);
+                
+                if (value.length > 10) {
+                    value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                } else if (value.length > 6) {
+                    value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+                } else if (value.length > 2) {
+                    value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+                }
+                e.target.value = value;
+            });
+        }
+
+        // CEP
+        const cepField = document.getElementById('edit_cep');
+        if (cepField) {
+            cepField.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 8) value = value.substring(0, 8);
+                
+                if (value.length > 5) {
+                    value = value.replace(/(\d{5})(\d{1,3})/, '$1-$2');
+                }
+                e.target.value = value;
+            });
+        }
+    }
+
+    applyMasks();
 });
 </script>
