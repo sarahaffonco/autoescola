@@ -49,32 +49,3 @@ class Lesson(models.Model):
     
     def __str__(self):
         return f"Aula {self.lesson_number} - {self.student.full_name} com {self.instructor.full_name} em {self.date}"
-
-
-class StudentProgress(models.Model):
-    """Model to track student progress in different skills"""
-    SKILL_CHOICES = (
-        ('baliza', 'Baliza'),
-        ('estacionamento', 'Estacionamento'),
-        ('direcao_via', 'Direção em via'),
-        ('conversoes', 'Conversões'),
-        ('ladeira', 'Ladeira'),
-    )
-    
-    student = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='progress',
-        limit_choices_to={'role': 'aluno'}
-    )
-    skill = models.CharField(max_length=50, choices=SKILL_CHOICES)
-    progress = models.IntegerField(default=0, help_text="Progresso de 0 a 100")
-    
-    class Meta:
-        unique_together = ['student', 'skill']
-        verbose_name = 'Progresso do Aluno'
-        verbose_name_plural = 'Progressos dos Alunos'
-    
-    def __str__(self):
-        return f"{self.student.full_name} - {self.get_skill_display()}: {self.progress}%"
-
