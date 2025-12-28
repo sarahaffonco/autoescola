@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.exceptions import ValidationError
+import os
 
 
 class User(AbstractUser):
@@ -13,7 +15,414 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='aluno')
     phone = models.CharField(max_length=20, blank=True)
     full_name = models.CharField(max_length=255, blank=True)
+    registration_date = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "Usuário"
+        verbose_name_plural = "Usuários"
+        ordering = ['-registration_date']
     
     def __str__(self):
         return f"{self.full_name or self.username} ({self.get_role_display()})"
+    
+    # Métodos utilitários
+    def is_aluno(self):
+        return self.role == 'aluno'
+    
+    def is_instrutor(self):
+        return self.role == 'instrutor'
+    
+    def is_funcionario(self):
+        return self.role == 'funcionario'
+    
+    def get_profile(self):
+        """Retorna o perfil específico do usuário"""
+        if self.is_aluno():
+            return StudentProfile.objects.filter(user=self).first()
+        elif self.is_instrutor():
+            return InstructorProfile.objects.filter(user=self).first()
+        elif self.is_funcionario():
+            return EmployeeProfile.objects.filter(user=self).first()
+        return None
 
+
+# Validadores
+def validate_image_extension(value):
+    """Valida a extensão da imagem"""
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.jpg', '.jpeg', '.png']
+    
+    if ext not in valid_extensions:
+        raise ValidationError('Formato de arquivo não suportado. Use apenas JPG, JPEG ou PNG.')
+
+
+def validate_image_size(value):
+    """Valida o tamanho da imagem (máximo 5MB)"""
+    max_size = 5 * 1024 * 1024  # 5MB
+    if value.size > max_size:
+        raise ValidationError(f'A imagem é muito grande. Tamanho máximo: {max_size // (1024*1024)}MB')
+
+
+def validate_document_size(value):
+    """Valida o tamanho do documento (máximo 10MB)"""
+    max_size = 10 * 1024 * 1024  # 10MB
+    if value.size > max_size:
+        raise ValidationError(f'O documento é muito grande. Tamanho máximo: {max_size // (1024*1024)}MB')
+
+
+def validate_document_extension(value):
+    """Valida a extensão do documento"""
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx']
+    
+    if ext not in valid_extensions:
+        raise ValidationError('Formato de arquivo não suportado. Use apenas JPG, PNG, PDF, DOC ou DOCX.')
+
+
+class BaseProfile(models.Model):
+    """Classe base para perfis com campos comuns"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='%(class)s_profile')
+    full_name = models.CharField(max_length=255, verbose_name="Nome Completo")
+    email = models.EmailField(verbose_name="Email")
+    phone = models.CharField(max_length=20, verbose_name="Telefone")
+    birth_date = models.DateField(verbose_name="Data de Nascimento")
+    photo = models.ImageField(
+        upload_to='profiles/photos/',
+        verbose_name="Foto 3x4",
+        validators=[validate_image_extension, validate_image_size]
+    )
+    cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF")
+    rg = models.CharField(max_length=20, verbose_name="RG")
+    cep = models.CharField(max_length=9, verbose_name="CEP")
+    address = models.CharField(max_length=255, verbose_name="Endereço")
+    address_number = models.CharField(max_length=10, verbose_name="Número")
+    address_complement = models.CharField(max_length=100, verbose_name="Complemento", blank=True)
+    
+    # Campos automáticos
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        abstract = True
+        ordering = ['full_name']
+    
+    def __str__(self):
+        return f"{self.full_name}"
+    
+    def clean(self):
+        """Validações comuns para todos os perfis"""
+        super().clean()
+        
+        # Validação do CPF (11 dígitos)
+        cpf_digits = ''.join(filter(str.isdigit, self.cpf))
+        if len(cpf_digits) != 11:
+            raise ValidationError({'cpf': 'CPF deve conter exatamente 11 dígitos'})
+        
+        # Validação do RG (8-20 caracteres)
+        rg_clean = ''.join(filter(lambda x: x.isalnum() or x in '.-', self.rg))
+        if len(rg_clean) < 8 or len(rg_clean) > 20:
+            raise ValidationError({'rg': 'RG deve ter entre 8 e 20 caracteres válidos'})
+        
+        # Validação do CEP (8 dígitos)
+        cep_digits = ''.join(filter(str.isdigit, self.cep))
+        if len(cep_digits) != 8:
+            raise ValidationError({'cep': 'CEP deve conter exatamente 8 dígitos'})
+        
+        # Validação da data de nascimento (não pode ser futura)
+        from datetime import date
+        if self.birth_date > date.today():
+            raise ValidationError({'birth_date': 'Data de nascimento não pode ser futura'})
+    
+    def save(self, *args, **kwargs):
+        self.clean()  # Executa validações antes de salvar
+        super().save(*args, **kwargs)
+
+
+class StudentProfile(BaseProfile):
+    """Perfil específico para alunos"""
+    STATUS_CHOICES = (
+        ('ativo', 'Ativo'),
+        ('inativo', 'Inativo'),
+        ('pendente', 'Pendente'),
+        ('suspenso', 'Suspenso'),
+    )
+    
+    # Campos específicos do aluno
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='ativo',
+        verbose_name="Status"
+    )
+    progress = models.IntegerField(
+        default=0, 
+        verbose_name="Progresso (%)",
+        help_text="Progresso do aluno em porcentagem"
+    )
+    total_lessons = models.IntegerField(
+        default=0, 
+        verbose_name="Total de Aulas"
+    )
+    completed_lessons = models.IntegerField(
+        default=0, 
+        verbose_name="Aulas Concluídas"
+    )
+    enrollment_date = models.DateField(
+        auto_now_add=True,
+        verbose_name="Data de Matrícula"
+    )
+    observation = models.TextField(
+        blank=True,
+        verbose_name="Observações"
+    )
+    
+    # Documentos de suporte opcionais
+    support_document_1 = models.FileField(
+        upload_to='students/documents/',
+        null=True,
+        blank=True,
+        verbose_name="Documento de Suporte 1",
+        validators=[validate_document_extension, validate_document_size]
+    )
+    support_document_2 = models.FileField(
+        upload_to='students/documents/',
+        null=True,
+        blank=True,
+        verbose_name="Documento de Suporte 2",
+        validators=[validate_document_extension, validate_document_size]
+    )
+    
+    class Meta:
+        verbose_name = "Perfil de Aluno"
+        verbose_name_plural = "Perfis de Alunos"
+    
+    def clean(self):
+        """Validações específicas para aluno"""
+        super().clean()
+        
+        # Validação de idade mínima para aluno (18 anos)
+        from datetime import date
+        today = date.today()
+        age = today.year - self.birth_date.year - (
+            (today.month, today.day) < (self.birth_date.month, self.birth_date.day)
+        )
+        
+        if age < 18:
+            raise ValidationError({'birth_date': f'Aluno deve ter pelo menos 18 anos. Idade atual: {age} anos'})
+        
+        # Validação do progresso (0-100%)
+        if self.progress < 0 or self.progress > 100:
+            raise ValidationError({'progress': 'Progresso deve estar entre 0% e 100%'})
+        
+        # Validação das aulas
+        if self.completed_lessons > self.total_lessons:
+            raise ValidationError({'completed_lessons': 'Aulas concluídas não podem ser maiores que o total de aulas'})
+    
+    def update_progress(self):
+        """Atualiza automaticamente o progresso baseado nas aulas"""
+        if self.total_lessons > 0:
+            self.progress = int((self.completed_lessons / self.total_lessons) * 100)
+        else:
+            self.progress = 0
+        self.save()
+
+
+class InstructorProfile(BaseProfile):
+    """Perfil específico para instrutores"""
+    STATUS_CHOICES = (
+        ('ativo', 'Ativo'),
+        ('inativo', 'Inativo'),
+        ('pendente', 'Pendente Aprovação'),
+        ('suspenso', 'Suspenso'),
+    )
+    
+    # Campos específicos do instrutor
+    cnh = models.CharField(
+        max_length=30, 
+        verbose_name="Número da CNH"
+    )
+    cnh_emission_date = models.DateField(
+        verbose_name="Data de Emissão da CNH"
+    )
+    cnh_document = models.FileField(
+        upload_to='instructors/cnh/',
+        verbose_name="CNH (Frente e Verso)",
+        validators=[validate_document_extension, validate_document_size]
+    )
+    credential = models.CharField(
+        max_length=100, 
+        unique=True,
+        verbose_name="Credencial de Instrutor"
+    )
+    
+    # Documentos de suporte opcionais
+    support_document_1 = models.FileField(
+        upload_to='instructors/documents/',
+        null=True,
+        blank=True,
+        verbose_name="Documento de Suporte 1",
+        validators=[validate_document_extension, validate_document_size]
+    )
+    support_document_2 = models.FileField(
+        upload_to='instructors/documents/',
+        null=True,
+        blank=True,
+        verbose_name="Documento de Suporte 2",
+        validators=[validate_document_extension, validate_document_size]
+    )
+    
+    # Status e métricas
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='pendente',
+        verbose_name="Status"
+    )
+    rating = models.FloatField(
+        default=0.0,
+        verbose_name="Avaliação",
+        help_text="Avaliação média do instrutor (0-5)"
+    )
+    total_students = models.IntegerField(
+        default=0, 
+        verbose_name="Total de Alunos"
+    )
+    total_lessons = models.IntegerField(
+        default=0, 
+        verbose_name="Total de Aulas Ministradas"
+    )
+    hire_date = models.DateField(
+        auto_now_add=True,
+        verbose_name="Data de Contratação"
+    )
+    observation = models.TextField(
+        blank=True,
+        verbose_name="Observações"
+    )
+    
+    class Meta:
+        verbose_name = "Perfil de Instrutor"
+        verbose_name_plural = "Perfis de Instrutores"
+    
+    def clean(self):
+        """Validações específicas para instrutor"""
+        super().clean()
+        
+        # Validação da CNH (mínimo 9 dígitos)
+        cnh_digits = ''.join(filter(str.isdigit, self.cnh))
+        if len(cnh_digits) < 9:
+            raise ValidationError({'cnh': 'CNH deve conter pelo menos 9 dígitos'})
+        
+        # Validação da credencial (mínimo 5 caracteres)
+        if len(self.credential.strip()) < 5:
+            raise ValidationError({'credential': 'Credencial deve conter pelo menos 5 caracteres'})
+        
+        # Validação da data de emissão da CNH
+        from datetime import date
+        if self.cnh_emission_date > date.today():
+            raise ValidationError({'cnh_emission_date': 'Data de emissão da CNH não pode ser futura'})
+        
+        if self.cnh_emission_date <= self.birth_date:
+            raise ValidationError({'cnh_emission_date': 'Data de emissão da CNH deve ser posterior à data de nascimento'})
+        
+        # Validação da avaliação (0-5)
+        if self.rating < 0 or self.rating > 5:
+            raise ValidationError({'rating': 'Avaliação deve estar entre 0 e 5'})
+    
+    def calculate_rating(self, new_rating):
+        """Calcula a nova avaliação média"""
+        # Esta lógica seria implementada quando houver sistema de avaliações
+        pass
+    
+    def is_approved(self):
+        """Verifica se o instrutor está aprovado"""
+        return self.status == 'ativo'
+
+
+class EmployeeProfile(BaseProfile):
+    """Perfil específico para funcionários"""
+    DEPARTMENT_CHOICES = (
+        ('secretaria', 'Secretaria'),
+        ('financeiro', 'Financeiro'),
+        ('atendimento', 'Atendimento'),
+        ('administrativo', 'Administrativo'),
+        ('rh', 'Recursos Humanos'),
+        ('outro', 'Outro'),
+    )
+    
+    STATUS_CHOICES = (
+        ('ativo', 'Ativo'),
+        ('inativo', 'Inativo'),
+        ('ferias', 'Férias'),
+        ('afastado', 'Afastado'),
+        ('licenca', 'Licença'),
+    )
+    
+    # Campos específicos do funcionário
+    department = models.CharField(
+        max_length=50, 
+        choices=DEPARTMENT_CHOICES,
+        verbose_name="Departamento"
+    )
+    position = models.CharField(
+        max_length=100,
+        verbose_name="Cargo"
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='ativo',
+        verbose_name="Status"
+    )
+    hire_date = models.DateField(
+        auto_now_add=True,
+        verbose_name="Data de Contratação"
+    )
+    salary = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Salário"
+    )
+    observation = models.TextField(
+        blank=True,
+        verbose_name="Observações"
+    )
+    
+    # Documentos de suporte opcionais
+    support_document_1 = models.FileField(
+        upload_to='employees/documents/',
+        null=True,
+        blank=True,
+        verbose_name="Documento de Suporte 1",
+        validators=[validate_document_extension, validate_document_size]
+    )
+    support_document_2 = models.FileField(
+        upload_to='employees/documents/',
+        null=True,
+        blank=True,
+        verbose_name="Documento de Suporte 2",
+        validators=[validate_document_extension, validate_document_size]
+    )
+    
+    class Meta:
+        verbose_name = "Perfil de Funcionário"
+        verbose_name_plural = "Perfis de Funcionários"
+    
+    def clean(self):
+        """Validações específicas para funcionário"""
+        super().clean()
+        
+        # Validação do cargo
+        if len(self.position.strip()) < 2:
+            raise ValidationError({'position': 'Cargo deve conter pelo menos 2 caracteres'})
+        
+        # Validação do salário (se informado)
+        if self.salary and self.salary < 0:
+            raise ValidationError({'salary': 'Salário não pode ser negativo'})
+    
+    def is_active_employee(self):
+        """Verifica se o funcionário está ativo"""
+        return self.status == 'ativo'
