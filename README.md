@@ -1,73 +1,201 @@
-# Welcome to your Lovable project
+# AutoEscola - Sistema de Gestão para Auto Escola
 
-## Project info
+Sistema de gestão completo para auto escola, desenvolvido em Python com Django.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Tecnologias Utilizadas
 
-## How can I edit this code?
+- **Backend**: Python 3.12 + Django 5.0
+- **Frontend**: HTML5 + Tailwind CSS 3.0
+- **Banco de Dados**: SQLite (desenvolvimento) / PostgreSQL (produção)
+- **Autenticação**: Django Auth System
 
-There are several ways of editing your application.
+## 📋 Funcionalidades
 
-**Use Lovable**
+### Para Instrutores
+- Dashboard com métricas e estatísticas
+- Visualização de aulas agendadas
+- Acompanhamento de desempenho semanal
+- Taxa de aprovação de alunos
+- Gestão de aulas (agendadas, em andamento, completadas)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Para Alunos
+- Dashboard personalizado
+- Acompanhamento de progresso (horas completadas)
+- Visualização de próximas aulas
+- Histórico de aulas realizadas
+- Sistema de agendamento de aulas
+- Acompanhamento de habilidades práticas
 
-Changes made via Lovable will be committed automatically to this repo.
+### Para Funcionários
+- Acesso administrativo via Django Admin
+- Gestão de usuários
+- Gestão de aulas e agendamentos
 
-**Use your preferred IDE**
+## 🛠️ Instalação e Configuração
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Pré-requisitos
+- Python 3.12 ou superior
+- pip (gerenciador de pacotes Python)
+- Git
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Passo a Passo
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. **Clone o repositório**
+```bash
+git clone https://github.com/meandrad/auto-drive-hub.git
+cd auto-drive-hub
 ```
 
-**Edit a file directly in GitHub**
+2. **Crie e ative um ambiente virtual**
+```bash
+python3 -m venv venv
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# No Linux/Mac:
+source venv/bin/activate
 
-**Use GitHub Codespaces**
+# No Windows:
+venv\Scripts\activate
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. **Instale as dependências**
+```bash
+pip install -r requirements.txt
+```
 
-## What technologies are used for this project?
+4. **Execute as migrações do banco de dados**
+```bash
+python manage.py migrate
+```
 
-This project is built with:
+5. **Crie um superusuário (admin)**
+```bash
+python manage.py createsuperuser
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+6. **Inicie o servidor de desenvolvimento**
+```bash
+python manage.py runserver
+```
 
-## How can I deploy this project?
+7. **Acesse o sistema**
+- Aplicação: http://localhost:8000/
+- Admin: http://localhost:8000/admin/
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 📁 Estrutura do Projeto
 
-## Can I connect a custom domain to my Lovable project?
+```
+auto-drive-hub/
+├── autoescola/          # Configurações do projeto Django
+│   ├── settings.py      # Configurações principais
+│   ├── urls.py          # URLs principais
+│   └── wsgi.py          # WSGI para deploy
+├── accounts/            # App de autenticação e usuários
+│   ├── models.py        # Modelo de usuário customizado
+│   ├── views.py         # Views de login/registro
+│   └── forms.py         # Formulários de autenticação
+├── core/                # App principal com dashboards
+│   ├── views.py         # Views dos dashboards
+│   └── urls.py          # URLs do core
+├── lessons/             # App de gestão de aulas
+│   ├── models.py        # Modelos de Aula e Progresso
+│   ├── forms.py         # Formulários de agendamento
+│   └── admin.py         # Configuração do admin
+├── templates/           # Templates HTML
+│   ├── base.html        # Template base
+│   ├── accounts/        # Templates de autenticação
+│   └── core/            # Templates dos dashboards
+├── static/              # Arquivos estáticos (CSS, JS)
+├── requirements.txt     # Dependências Python
+└── manage.py            # Script de gerenciamento Django
+```
 
-Yes, you can!
+## 🎨 Estilização
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+O projeto utiliza **Tailwind CSS** via CDN com configuração personalizada incluindo:
+- Paleta de cores customizada baseada no design original
+- Gradientes personalizados
+- Animações suaves
+- Sistema de componentes reutilizáveis
+- Design responsivo mobile-first
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 👥 Tipos de Usuário
+
+### Aluno
+- Visualiza seu progresso
+- Agenda aulas
+- Acompanha habilidades
+
+### Instrutor
+- Visualiza dashboard com métricas
+- Gerencia aulas
+- Acompanha desempenho
+
+### Funcionário
+- Acesso administrativo completo
+- Gestão de usuários e aulas
+
+## 🔐 Autenticação
+
+O sistema utiliza o sistema de autenticação nativo do Django com:
+- Modelo de usuário customizado
+- Sistema de roles (aluno, instrutor, funcionário)
+- Páginas de login e registro personalizadas
+- Proteção de rotas com `@login_required`
+
+## 📊 Modelos de Dados
+
+### User (Usuário)
+- Campos: username, email, full_name, phone, role
+- Roles: aluno, instrutor, funcionario
+
+### Lesson (Aula)
+- Campos: student, instructor, date, time, duration, location, vehicle_type, status, score
+- Status: scheduled, in-progress, completed, cancelled
+
+### StudentProgress (Progresso do Aluno)
+- Campos: student, skill, progress
+- Skills: baliza, estacionamento, direção em via, conversões, ladeira
+
+## 🚀 Deploy
+
+### Variáveis de Ambiente
+Crie um arquivo `.env` na raiz do projeto:
+```
+SECRET_KEY=sua_chave_secreta_aqui
+DEBUG=False
+ALLOWED_HOSTS=seu_dominio.com
+DATABASE_URL=postgresql://user:password@host:port/database
+```
+
+### Comandos para Deploy
+```bash
+# Coletar arquivos estáticos
+python manage.py collectstatic --noinput
+
+# Executar migrações
+python manage.py migrate
+
+# Criar superusuário
+python manage.py createsuperuser
+```
+
+## 📝 Referências
+
+Este projeto foi migrado de uma aplicação React/TypeScript para Django, mantendo toda a funcionalidade e estilização originais. O design foi baseado no repositório de referência [sarahaffonco/transito](https://github.com/sarahaffonco/transito).
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou pull requests.
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT.
+
+## 📞 Suporte
+
+Para dúvidas ou suporte, abra uma issue no repositório.
+
+---
+
+**Desenvolvido com ❤️ usando Django**
+

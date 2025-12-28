@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Agendar Aula - AutoEscola{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 pt-20 pb-12">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-10 animate-fade-in">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                Agendar Aula Prática
+            </h1>
+            <p class="text-gray-600">
+                Escolha a data, horário e instrutor para sua próxima aula
+            </p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-2xl p-8 shadow-card">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Date Selection -->
+                <div>
+                    <label for="id_date" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Selecione a Data
+                    </label>
+                    <input type="date" 
+                           name="date" 
+                           id="id_date" 
+                           required
+                           min="{{ today|date:'Y-m-d' }}"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                </div>
+
+                <!-- Time Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Selecione o Horário
+                    </label>
+                    <select name="time" 
+                            id="id_time" 
+                            required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                        <option value="">Escolha um horário</option>
+                        {% for slot in time_slots %}
+                        <option value="{{ slot }}">{{ slot }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Instructor Selection -->
+                <div>
+                    <label for="id_instructor" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Escolha seu Instrutor
+                    </label>
+                    <select name="instructor" 
+                            id="id_instructor" 
+                            required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                        <option value="">Escolha um instrutor</option>
+                        {% for instructor in instructors %}
+                        <option value="{{ instructor.id }}">{{ instructor.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Vehicle Type -->
+                <div>
+                    <label for="id_vehicle_type" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Tipo de Veículo
+                    </label>
+                    <select name="vehicle_type" 
+                            id="id_vehicle_type" 
+                            required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                        <option value="">Escolha o tipo</option>
+                        <option value="A">🏍️ Categoria A - Motocicleta</option>
+                        <option value="B">🚗 Categoria B - Carro</option>
+                        <option value="D">🚌 Categoria D - Ônibus</option>
+                    </select>
+                </div>
+
+                <!-- Location -->
+                <div>
+                    <label for="id_location" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Local de Encontro
+                    </label>
+                    <select name="location" 
+                            id="id_location" 
+                            required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                        <option value="">Escolha o local</option>
+                        {% for location in locations %}
+                        <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <a href="{% url 'aluno_dashboard' %}" 
+                       class="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all">
+                        Voltar
+                    </a>
+                    <button type="submit" 
+                            class="px-6 py-3 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card flex items-center gap-2">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Confirmar Agendamento
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Card -->
+        <div class="mt-8 bg-white rounded-2xl p-6 shadow-card">
+            <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Informações Importantes
+            </h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+                <li>• Conforme resolução CONTRAN, são obrigatórias 20 horas de aulas práticas</li>
+                <li>• Cada aula tem duração de 50 minutos</li>
+                <li>• Compareça com 10 minutos de antecedência</li>
+                <li>• Traga documento de identificação e comprovante de matrícula</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
