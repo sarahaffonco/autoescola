@@ -40,25 +40,9 @@ def instrutor_dashboard(request):
         date__lte=today + timedelta(days=1)
     ).select_related('student')[:4]
     
-    # Weekly performance (last 7 days)
-    week_data = []
-    for i in range(7):
-        day = today - timedelta(days=6-i)
-        count = Lesson.objects.filter(
-            instructor=request.user,
-            date=day,
-            status='completed'
-        ).count()
-        week_data.append({
-            'day': day.strftime('%a')[:3],
-            'count': count
-        })
-    
     context = {
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
-        'week_data': week_data,
-        'approval_rate': 92,  # This would be calculated from actual data
     }
     
     return render(request, 'core/instrutor.html', context)

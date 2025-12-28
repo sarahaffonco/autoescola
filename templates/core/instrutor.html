@@ -99,126 +99,80 @@
             </div>
         </div>
 
-        <!-- Performance Chart and Approval Rate -->
+        <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-            <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-card">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900">Desempenho Semanal</h2>
-                        <p class="text-sm text-gray-600">Aulas realizadas por dia</p>
-                    </div>
-                    <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                    </svg>
-                </div>
-                <div class="flex items-end gap-3 h-40">
-                    {% for day in week_data %}
-                    <div class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-full rounded-lg gradient-primary transition-all duration-500 hover:opacity-80"
-                            style="--bar-height: {{ day.count|default:0 }}%; height: var(--bar-height);">
-                        <span class="text-xs text-gray-500">{{ day.day }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl p-6 shadow-card">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Taxa de Aprovação</h2>
-                <div class="flex items-center justify-center mb-4">
-                    <div class="relative w-32 h-32">
-                        <svg class="w-full h-full transform -rotate-90">
-                            <circle cx="64" cy="64" r="56" stroke="#e5e7eb" stroke-width="12" fill="none" />
-                            <circle cx="64" cy="64" r="56" stroke="url(#gradient)" stroke-width="12" fill="none"
-                                stroke-dasharray="323 352" stroke-linecap="round" />
-                            <defs>
-                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color:hsl(199, 89%, 48%);stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:hsl(172, 66%, 50%);stop-opacity:1" />
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-3xl font-bold text-gray-900">{{ approval_rate }}%</span>
-                        </div>
-                    </div>
-                </div>
-                <p class="text-center text-sm text-gray-600">
-                    23 de 25 alunos aprovados no último trimestre
-                </p>
-            </div>
-        </div>
-
-        <!-- Upcoming Lessons -->
-        <div>
-            <div class="flex items-center justify-between mb-6">
+            <!-- Upcoming Lessons - Ocupa 3 colunas (largura total) -->
+            <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-card">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Próximas Aulas</h2>
-                    <p class="text-gray-600">Suas aulas agendadas para hoje e amanhã</p>
-                </div>
-            </div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Próximas Aulas</h2>
+                            <p class="text-gray-600">Suas aulas agendadas para hoje e amanhã</p>
+                        </div>
+                    </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {% for lesson in upcoming_lessons %}
-                <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-lg transition-all">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary text-white font-bold">
-                                {{ lesson.student.full_name|first }}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for lesson in upcoming_lessons %}
+                        <div class="bg-white rounded-2xl p-6 shadow-card hover:shadow-lg transition-all">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary text-white font-bold">
+                                        {{ lesson.student.full_name|first }}
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900">{{ lesson.student.full_name }}</h3>
+                                        <p class="text-sm text-gray-600">Aula {{ lesson.lesson_number }} de 20</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-medium
+                                    {% if lesson.status == 'scheduled' %}bg-blue-100 text-blue-700
+                                    {% elif lesson.status == 'in-progress' %}bg-yellow-100 text-yellow-700
+                                    {% else %}bg-green-100 text-green-700{% endif %}">
+                                    {{ lesson.get_status_display }}
+                                </span>
                             </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">{{ lesson.student.full_name }}</h3>
-                                <p class="text-sm text-gray-600">Aula {{ lesson.lesson_number }} de 20</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div class="flex items-center gap-2 text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    {{ lesson.date|date:"d/m/Y" }}
+                                </div>
+                                <div class="flex items-center gap-2 text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    {{ lesson.time|time:"H:i" }}
+                                </div>
+                                <div class="flex items-center gap-2 text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    {{ lesson.location|truncatewords:2 }}
+                                </div>
+                                <div class="flex items-center gap-2 text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Categoria {{ lesson.vehicle_type }}
+                                </div>
                             </div>
                         </div>
-                        <span class="px-3 py-1 rounded-full text-xs font-medium
-                            {% if lesson.status == 'scheduled' %}bg-blue-100 text-blue-700
-                            {% elif lesson.status == 'in-progress' %}bg-yellow-100 text-yellow-700
-                            {% else %}bg-green-100 text-green-700{% endif %}">
-                            {{ lesson.get_status_display }}
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                </path>
-                            </svg>
-                            {{ lesson.date|date:"d/m/Y" }}
+                        {% empty %}
+                        <div class="col-span-3 text-center py-12 text-gray-500">
+                            Nenhuma aula agendada para os próximos dias
                         </div>
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            {{ lesson.time|time:"H:i" }}
-                        </div>
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                </path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            {{ lesson.location|truncatewords:2 }}
-                        </div>
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                            Categoria {{ lesson.vehicle_type }}
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% empty %}
-                <div class="col-span-2 text-center py-12 text-gray-500">
-                    Nenhuma aula agendada para os próximos dias
-                </div>
-                {% endfor %}
             </div>
         </div>
     </div>

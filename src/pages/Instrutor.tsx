@@ -146,46 +146,6 @@ const Instrutor = () => {
               ))}
             </div>
           </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-card animate-fade-in" style={{ animationDelay: "0.7s" }}>
-            <h2 className="text-xl font-bold text-foreground mb-4">Taxa de Aprovação</h2>
-            <div className="flex items-center justify-center mb-4">
-              <div className="relative w-32 h-32">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="hsl(var(--secondary))"
-                    strokeWidth="12"
-                    fill="none"
-                  />
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="url(#gradient)"
-                    strokeWidth="12"
-                    fill="none"
-                    strokeDasharray={`${0.92 * 352} 352`}
-                    strokeLinecap="round"
-                  />
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" />
-                      <stop offset="100%" stopColor="hsl(var(--accent))" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-3xl font-bold text-foreground">92%</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-center text-sm text-muted-foreground">
-              23 de 25 alunos aprovados no último trimestre
-            </p>
-          </div>
         </div>
 
         {/* Lessons Section */}
