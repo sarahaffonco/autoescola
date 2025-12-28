@@ -8,16 +8,15 @@ from .forms import (
     InstructorRegistrationForm, 
     EmployeeRegistrationForm
 )
-
-
+from .models import User
 def login_view(request):
-    """Login view"""
+    """Login view com validações específicas"""
     if request.user.is_authenticated:
         # Redireciona para o dashboard apropriado baseado no role
         if request.user.role == 'instrutor':
             return redirect('instrutor_dashboard')
         elif request.user.role == 'funcionario':
-            return redirect('funcionario_dashboard')  # Você precisará criar esta view
+            return redirect('funcionario_dashboard')
         else:
             return redirect('aluno_dashboard')
     
@@ -27,29 +26,27 @@ def login_view(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             
-            # Try to get user by email
-            from .models import User
             try:
-                user_obj = User.objects.get(email=email)
-                user = authenticate(username=user_obj.username, password=password)
-                if user:
-                    login(request, user)
+                user = User.objects.get(email=email)
+                user_auth = authenticate(username=user.username, password=password)
+                
+                if user_auth:
+                    login(request, user_auth)
                     # Redireciona baseado no role
-                    if user.role == 'instrutor':
+                    if user_auth.role == 'instrutor':
                         return redirect('instrutor_dashboard')
-                    elif user.role == 'funcionario':
+                    elif user_auth.role == 'funcionario':
                         return redirect('funcionario_dashboard')
                     else:
                         return redirect('aluno_dashboard')
-                else:
-                    messages.error(request, 'Email ou senha incorretos')
+                
             except User.DoesNotExist:
-                messages.error(request, 'Email ou senha incorretos')
+                # Isso já foi tratado no formulário
+                pass
     else:
         form = UserLoginForm()
     
     return render(request, 'accounts/login.html', {'form': form})
-
 
 def choice_view(request):
     """View para escolher o tipo de cadastro"""
@@ -143,7 +140,6 @@ def register_view(request):
 def logout_view(request):
     """Logout view"""
     logout(request)
-    messages.success(request, 'Você saiu com sucesso!')
     return redirect('login')
 
 

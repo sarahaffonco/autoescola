@@ -54,7 +54,9 @@
                             </label>
                             <input type="text" 
                                    name="username" 
+                                   value="{{ form.username.value|default:'' }}"
                                    id="id_username" 
+                                   value="{{ form.username.value|default:'' }}"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                    placeholder="escolha_um_usuario">
@@ -70,7 +72,9 @@
                             </label>
                             <input type="email" 
                                    name="email" 
+                                   value="{{ form.email.value|default:'' }}"
                                    id="id_email" 
+                                   value="{{ form.email.value|default:'' }}"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                    placeholder="seu@email.com">
@@ -132,6 +136,7 @@
                             </label>
                             <input type="text" 
                                    name="full_name" 
+                                   value="{{ form.full_name.value|default:'' }}"
                                    id="id_full_name" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -145,6 +150,7 @@
                             </label>
                             <input type="text" 
                                    name="cpf" 
+                                   value="{{ form.cpf.value|default:'' }}"
                                    id="id_cpf" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -163,7 +169,8 @@
                             </label>
                             <input type="text" 
                                    name="rg" 
-                                   id="id_rg" 
+                                   id="id_rg"
+                                   value="{{ form.rg.value|default:'' }}" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                    placeholder="00.000.000-0"
@@ -182,6 +189,7 @@
                             <input type="tel" 
                                    name="phone" 
                                    id="id_phone" 
+                                   value="{{ form.phone.value|default:'' }}"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                    placeholder="(00) 00000-0000">
@@ -194,6 +202,7 @@
                             </label>
                             <input type="date" 
                                    name="birth_date" 
+                                   value="{{ form.birth_date.value|default:'' }}"
                                    id="id_birth_date" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
