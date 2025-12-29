@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
 from django.http import JsonResponse
 from datetime import date, timedelta
 from lessons.models import Lesson
@@ -28,25 +28,44 @@ def instrutor_dashboard(request):
         date__gte=this_month_start
     )
     
+    # Calculate average rating
+    avg_rating = monthly_lessons.aggregate(Avg('student_rating'))['student_rating__avg']
+    
     stats = {
         'lessons_today': today_lessons.filter(status='scheduled').count(),
         'active_students': monthly_lessons.values('student').distinct().count(),
         'completed_lessons': monthly_lessons.filter(status='completed').count(),
         'hours_worked': monthly_lessons.filter(status='completed').count() * 50 // 60,  # Convert minutes to hours
+        'average_rating': round(avg_rating, 1) if avg_rating else None,
     }
     
     # Get upcoming lessons (today and tomorrow)
     upcoming_lessons = Lesson.objects.filter(
         instructor=request.user,
         date__gte=today,
-        date__lte=today + timedelta(days=1)
+        date__lte=today + timedelta(days=1),
+        status__in=['scheduled', 'in-progress']
     ).select_related('student')[:4]
+    
+    # Get pending lessons (awaiting instructor confirmation)
+    pending_lessons = Lesson.objects.filter(
+        instructor=request.user,
+        status='pending'
+    ).select_related('student').order_by('date', 'time')[:10]
+    
+    # Get recent rated lessons (with feedback from students)
+    recent_ratings = Lesson.objects.filter(
+        instructor=request.user,
+        student_rating__isnull=False
+    ).select_related('student').order_by('-updated_at')[:5]
     
     context = {
         'user': request.user,
         'profile': request.user.get_profile(),
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
+        'pending_lessons': pending_lessons,
+        'recent_ratings': recent_ratings,
     }
     
     return render(request, 'core/instrutor.html', context)
@@ -70,6 +89,18 @@ def aluno_dashboard(request):
         status='scheduled'
     ).order_by('date', 'time').select_related('instructor')[:3]
     
+    # Get rejected lessons (awaiting reschedule)
+    rejected_lessons = Lesson.objects.filter(
+        student=request.user,
+        status='cancelled'
+    ).order_by('-updated_at')[:5]
+    
+    # Get pending lessons (awaiting instructor confirmation)
+    pending_lessons = Lesson.objects.filter(
+        student=request.user,
+        status='pending'
+    ).order_by('-created_at')[:3]
+    
     # Calculate progress
     total_hours = completed_lessons.count() * 50 // 60  # Convert to hours
     required_hours = 20
@@ -87,6 +118,8 @@ def aluno_dashboard(request):
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
         'completed_lessons': completed_lessons,
+        'rejected_lessons': rejected_lessons,
+        'pending_lessons': pending_lessons,
         'total_hours': total_hours,
         'required_hours': required_hours,
         'progress_percentage': min(100, (total_hours / required_hours) * 100),
@@ -206,6 +239,11 @@ def filter_instructors(request):
     result = []
     for instructor in instructors[:20]:  # Máximo 20 instrutores
         profile = instructor.instructorprofile_profile
+        # Calcula avaliação média a partir das aulas completadas
+        avg_rating = instructor.instructor_lessons.filter(
+            student_rating__isnull=False
+        ).aggregate(Avg('student_rating'))['student_rating__avg']
+        
         result.append({
             'id': instructor.id,
             'name': instructor.full_name,
@@ -213,7 +251,7 @@ def filter_instructors(request):
             'gender_code': profile.gender,
             'gender_identity': profile.gender_identity,
             'gender_identity_label': profile.get_gender_identity_display() if profile.gender_identity else None,
-            'rating': profile.rating,
+            'rating': round(avg_rating, 1) if avg_rating else None,
             'vehicle_id': profile.vehicle.id if profile.vehicle else None,
         })
     
@@ -264,6 +302,168 @@ def filter_vehicles(request):
             result.append(item)
         
         return JsonResponse({'vehicles': result})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def submit_lesson_rating(request):
+    """API endpoint para o aluno avaliar uma aula"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        lesson_id = data.get('lesson_id')
+        rating = data.get('rating')
+        feedback = data.get('feedback', '')
+        
+        # Validações
+        if not lesson_id:
+            return JsonResponse({'error': 'ID da aula não fornecido'}, status=400)
+        
+        if not rating or not isinstance(rating, (int, float)):
+            return JsonResponse({'error': 'Avaliação inválida'}, status=400)
+        
+        if rating < 1 or rating > 5:
+            return JsonResponse({'error': 'Avaliação deve estar entre 1 e 5'}, status=400)
+        
+        # Busca a aula
+        try:
+            lesson = Lesson.objects.get(id=lesson_id, student=request.user)
+        except Lesson.DoesNotExist:
+            return JsonResponse({'error': 'Aula não encontrada'}, status=404)
+        
+        # Verifica se a aula foi completada
+        if lesson.status != 'completed':
+            return JsonResponse({'error': 'Apenas aulas completadas podem ser avaliadas'}, status=400)
+        
+        # Salva a avaliação
+        lesson.student_rating = rating
+        lesson.student_feedback = feedback
+        lesson.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Avaliação enviada com sucesso!',
+            'lesson_id': lesson.id,
+            'rating': float(lesson.student_rating),
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def reschedule_lesson(request, lesson_id):
+    """Endpoint para o aluno remarcar uma aula recusada"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        new_date = data.get('date')
+        new_time = data.get('time')
+        
+        # Busca a aula original (recusada)
+        try:
+            original_lesson = Lesson.objects.get(
+                id=lesson_id,
+                student=request.user,
+                status='cancelled'
+            )
+        except Lesson.DoesNotExist:
+            return JsonResponse({'error': 'Aula não encontrada ou já foi remarcada'}, status=404)
+        
+        # Validações de data e hora
+        if not new_date or not new_time:
+            return JsonResponse({'error': 'Data e hora são obrigatórios'}, status=400)
+        
+        # Cria nova aula com os mesmos dados
+        new_lesson = Lesson.objects.create(
+            student=original_lesson.student,
+            instructor=original_lesson.instructor,
+            date=new_date,
+            time=new_time,
+            duration=original_lesson.duration,
+            cep=original_lesson.cep,
+            rua=original_lesson.rua,
+            numero=original_lesson.numero,
+            bairro=original_lesson.bairro,
+            cidade=original_lesson.cidade,
+            estado=original_lesson.estado,
+            location=original_lesson.location,
+            vehicle_type=original_lesson.vehicle_type,
+            vehicle=original_lesson.vehicle,
+            lesson_number=original_lesson.lesson_number,
+            prefer_adapted_pcd=original_lesson.prefer_adapted_pcd,
+            prefer_dual_control=original_lesson.prefer_dual_control,
+            status='pending'
+        )
+        
+        # Marca a aula original como remarcada
+        original_lesson.notes = f"Remarcada em {date.today().strftime('%d/%m/%Y')} para {new_date} às {new_time}"
+        original_lesson.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Aula remarcada com sucesso! Aguarde a confirmação do instrutor.',
+            'lesson_id': new_lesson.id,
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def accept_lesson(request, lesson_id):
+    """Endpoint para instrutor aceitar uma aula"""
+    if request.user.role != 'instrutor':
+        return JsonResponse({'error': 'Apenas instrutores podem aceitar aulas'}, status=403)
+    
+    try:
+        lesson = Lesson.objects.get(id=lesson_id, instructor=request.user, status='pending')
+        lesson.status = 'scheduled'
+        lesson.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Aula confirmada com sucesso!',
+            'lesson_id': lesson.id
+        })
+    except Lesson.DoesNotExist:
+        return JsonResponse({'error': 'Aula não encontrada ou já foi processada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def reject_lesson(request, lesson_id):
+    """Endpoint para instrutor recusar uma aula"""
+    if request.user.role != 'instrutor':
+        return JsonResponse({'error': 'Apenas instrutores podem recusar aulas'}, status=403)
+    
+    try:
+        lesson = Lesson.objects.get(id=lesson_id, instructor=request.user, status='pending')
+        lesson.status = 'cancelled'
+        lesson.notes = f"Recusada pelo instrutor em {date.today().strftime('%d/%m/%Y')}"
+        lesson.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Aula recusada',
+            'lesson_id': lesson.id
+        })
+    except Lesson.DoesNotExist:
+        return JsonResponse({'error': 'Aula não encontrada ou já foi processada'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

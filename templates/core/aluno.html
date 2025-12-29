@@ -89,61 +89,184 @@
             </div>
         </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-            <!-- Upcoming Lessons -->
-            <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-card">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900">Próximas Aulas</h2>
-                        <p class="text-sm text-gray-600">Suas aulas agendadas</p>
-                    </div>
-                    <a href="{% url 'agendamento' %}" class="px-4 py-2 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all text-sm">
-                        Agendar Nova
-                    </a>
+        <!-- Cards de Status das Aulas - 3 Colunas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Próximas Aulas -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 shadow-card border-2 border-green-200">
+                <div class="flex items-center gap-2 mb-6">
+                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h2 class="text-lg font-bold text-gray-900">Próximas Aulas</h2>
+                    <span class="ml-auto bg-green-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ upcoming_lessons|length }}</span>
                 </div>
 
-                <div class="space-y-4">
+                <div class="space-y-3">
                     {% for lesson in upcoming_lessons %}
-                    <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
-                                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
+                    <div class="bg-white rounded-xl p-4 border border-green-200 hover:shadow-md transition-all">
+                        <div class="flex items-start gap-2 mb-2">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white font-bold text-sm flex-shrink-0">
+                                {{ lesson.instructor.full_name|first }}
                             </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">{{ lesson.date|date:"d/m/Y" }}</p>
-                                <p class="text-sm text-gray-600">
-                                    {{ lesson.time|time:"H:i" }} • {{ lesson.instructor.full_name }}
-                                    {% with ip=lesson.instructor.get_profile %}
-                                        {% if ip and ip.gender_identity %}
-                                            • {{ ip.get_gender_identity_display }}
-                                        {% endif %}
-                                    {% endwith %}
-                                </p>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-900 truncate">{{ lesson.instructor.full_name }}</p>
                             </div>
                         </div>
-                        <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-primary">
-                            Prática
-                        </span>
+
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 text-xs text-gray-700">
+                                <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>{{ lesson.date|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-700">
+                                <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>{{ lesson.time|time:"H:i" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 pt-2 border-t border-green-100">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                ✓ Confirmada
+                            </span>
+                        </div>
                     </div>
                     {% empty %}
-                    <p class="text-center py-8 text-gray-500">Nenhuma aula agendada</p>
+                    <div class="text-center py-6 text-gray-500">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-xs">Nenhuma aula</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- Lesson History -->            
-             <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-card">
+            <!-- Aulas Aguardando Confirmação -->
+            <div class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-6 shadow-card border-2 border-yellow-200">
                 <div class="flex items-center gap-2 mb-6">
-                    <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <h2 class="text-xl font-bold text-gray-900">Histórico de Aulas</h2>
+                    <h2 class="text-lg font-bold text-gray-900">Aguardando</h2>
+                    <span class="ml-auto bg-yellow-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ pending_lessons|length }}</span>
+                </div>
+
+                <div class="space-y-3">
+                    {% for lesson in pending_lessons %}
+                    <div class="bg-white rounded-xl p-4 border border-yellow-200 hover:shadow-md transition-all">
+                        <div class="flex items-start gap-2 mb-2">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500 text-white font-bold text-sm flex-shrink-0">
+                                {{ lesson.instructor.full_name|first }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-900 truncate">{{ lesson.instructor.full_name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 text-xs text-gray-700">
+                                <svg class="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>{{ lesson.date|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-700">
+                                <svg class="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>{{ lesson.time|time:"H:i" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 pt-2 border-t border-yellow-100">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                ⏳ Aguardando
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not pending_lessons %}
+                    <div class="text-center py-6 text-gray-500">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-xs">Nenhuma aula</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Aulas Recusadas -->
+            <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-6 shadow-card border-2 border-red-200">
+                <div class="flex items-center gap-2 mb-6">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    <h2 class="text-lg font-bold text-gray-900">Recusadas</h2>
+                    <span class="ml-auto bg-red-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ rejected_lessons|length }}</span>
+                </div>
+
+                <div class="space-y-3">
+                    {% for lesson in rejected_lessons %}
+                    <div class="bg-white rounded-xl p-4 border border-red-200 hover:shadow-md transition-all" id="rejected-lesson-{{ lesson.id }}">
+                        <div class="flex items-start gap-2 mb-2">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white font-bold text-sm flex-shrink-0">
+                                {{ lesson.instructor.full_name|first }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-900 truncate">{{ lesson.instructor.full_name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 text-xs text-gray-700">
+                                <svg class="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>{{ lesson.date|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-700">
+                                <svg class="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>{{ lesson.time|time:"H:i" }}</span>
+                            </div>
+                        </div>
+
+                        <button class="reschedule-btn mt-3 w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
+                                data-lesson-id="{{ lesson.id }}"
+                                data-vehicle-type="{{ lesson.vehicle_type }}">
+                            🔄 Remarcar
+                        </button>
+                    </div>
+                    {% endfor %}
+                    {% if not rejected_lessons %}
+                    <div class="text-center py-6 text-gray-500">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        <p class="text-xs">Nenhuma aula</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                <div class="flex items-center gap-2 mb-6">
                 </div>
 
                 <div class="overflow-x-auto">
+                                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+
+                    <h2 class="text-xl font-bold text-gray-900">Histórico de Aulas</h2>
                     <table class="w-full">
                         <thead>
                             <tr class="border-b border-gray-200">
@@ -291,6 +414,184 @@
                 closeChat.addEventListener('click', function() {
                     chatWindow.classList.add('hidden');
                 });
+            }
+        });
+
+        // Reschedule button event listeners
+        document.querySelectorAll('.reschedule-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const lessonId = this.getAttribute('data-lesson-id');
+                const vehicleType = this.getAttribute('data-vehicle-type');
+                openRescheduleModal(lessonId, vehicleType);
+            });
+        });
+
+        // Modal de remarcação
+        let currentRescheduleId = null;
+
+        function openRescheduleModal(lessonId, vehicleType) {
+            currentRescheduleId = lessonId;
+            const modal = document.getElementById('reschedule-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeRescheduleModal() {
+            const modal = document.getElementById('reschedule-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            // Limpar formulário
+            document.getElementById('reschedule-date').value = '';
+            document.getElementById('reschedule-time').value = '';
+        }
+
+        function submitReschedule() {
+            if (!currentRescheduleId) return;
+
+            const newDate = document.getElementById('reschedule-date').value;
+            const newTime = document.getElementById('reschedule-time').value;
+
+            if (!newDate || !newTime) {
+                alert('Por favor, selecione uma data e hora');
+                return;
+            }
+
+            const button = document.getElementById('reschedule-submit-btn');
+            button.disabled = true;
+            button.textContent = 'Remarcando...';
+
+            fetch(`/api/reschedule-lesson/${currentRescheduleId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    date: newDate,
+                    time: newTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove o card
+                    const card = document.getElementById(`rejected-lesson-${currentRescheduleId}`);
+                    if (card) {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateX(-100%)';
+                        setTimeout(() => card.remove(), 300);
+                    }
+                    
+                    alert('✅ Aula remarcada com sucesso! Aguarde a confirmação do instrutor.');
+                    closeRescheduleModal();
+                    
+                    // Recarrega após 1s
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('❌ Erro: ' + data.error);
+                    button.disabled = false;
+                    button.textContent = 'Remarcar';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Erro ao remarcar aula');
+                button.disabled = false;
+                button.textContent = 'Remarcar';
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Fechar modal ao clicar fora
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('reschedule-modal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeRescheduleModal();
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Modal de Remarcação -->
+    <div id="reschedule-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Remarcar Aula</h3>
+                <button onclick="closeRescheduleModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <p class="text-gray-600 text-sm mb-4">Escolha uma nova data e hora para sua aula</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data da Aula</label>
+                    <input type="date" id="reschedule-date" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           min="">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                    <select id="reschedule-time" 
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Selecione um horário</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeRescheduleModal()" 
+                        class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all">
+                    Cancelar
+                </button>
+                <button id="reschedule-submit-btn" onclick="submitReschedule()" 
+                        class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all">
+                    Remarcar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Definir data mínima como hoje
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('reschedule-date');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.min = today;
             }
         });
     </script>

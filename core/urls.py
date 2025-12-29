@@ -8,4 +8,8 @@ urlpatterns = [
     path('api/lookup-cep/', views.lookup_cep, name='lookup_cep'),
     path('api/filter-instructors/', views.filter_instructors, name='filter_instructors'),
     path('api/filter-vehicles/', views.filter_vehicles, name='filter_vehicles'),
+    path('api/submit-lesson-rating/', views.submit_lesson_rating, name='submit_lesson_rating'),
+    path('api/accept-lesson/<int:lesson_id>/', views.accept_lesson, name='accept_lesson'),
+    path('api/reject-lesson/<int:lesson_id>/', views.reject_lesson, name='reject_lesson'),
+    path('api/reschedule-lesson/<int:lesson_id>/', views.reschedule_lesson, name='reschedule_lesson'),
 ]

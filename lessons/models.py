@@ -5,6 +5,7 @@ from django.conf import settings
 class Lesson(models.Model):
     """Model for driving lessons"""
     STATUS_CHOICES = (
+        ('pending', 'Pendente de Confirmação'),
         ('scheduled', 'Agendada'),
         ('in-progress', 'Em Andamento'),
         ('completed', 'Completada'),
@@ -14,7 +15,6 @@ class Lesson(models.Model):
     VEHICLE_TYPE_CHOICES = (
         ('A', 'Categoria A - Motocicleta'),
         ('B', 'Categoria B - Carro'),
-        ('D', 'Categoria D - Ônibus'),
     )
     
     student = models.ForeignKey(
@@ -42,7 +42,7 @@ class Lesson(models.Model):
     # Campo legado para compatibilidade
     location = models.CharField(max_length=255, blank=True)
     vehicle_type = models.CharField(max_length=1, choices=VEHICLE_TYPE_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     score = models.CharField(max_length=50, blank=True, help_text="Avaliação da aula")
     notes = models.TextField(blank=True)
     lesson_number = models.IntegerField(default=1)
@@ -57,6 +57,22 @@ class Lesson(models.Model):
         null=True,
         blank=True,
         verbose_name='Veículo'
+    )
+    
+    # Avaliação do aluno sobre o instrutor (1-5 estrelas)
+    student_rating = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name='Avaliação do Aluno',
+        help_text='Nota de 1 a 5 estrelas dada pelo aluno'
+    )
+    # Feedback/comentário do aluno
+    student_feedback = models.TextField(
+        blank=True,
+        verbose_name='Feedback do Aluno',
+        help_text='Comentário do aluno sobre a aula'
     )
     
     created_at = models.DateTimeField(auto_now_add=True)
