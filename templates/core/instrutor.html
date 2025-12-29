@@ -74,6 +74,105 @@
             </div>
         </div>
 
+        <!-- Aulas Pendentes de Confirmação -->
+        {% if pending_lessons %}
+        <div class="mb-8">
+            <div class="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-2xl p-6 shadow-card border-2 border-orange-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500">
+                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">Aulas Aguardando Confirmação</h3>
+                            <p class="text-sm text-gray-600">{{ pending_lessons|length }} aula{{ pending_lessons|length|pluralize }} pendente{{ pending_lessons|length|pluralize }}</p>
+                        </div>
+                    </div>
+                    <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        {{ pending_lessons|length }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                    {% for lesson in pending_lessons %}
+                    <div class="bg-white rounded-xl p-5 shadow-md border border-orange-200 hover:shadow-lg transition-all" id="lesson-card-{{ lesson.id }}">
+                        <!-- Cabeçalho do aluno -->
+                        <div class="flex items-start gap-3 mb-4">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-full gradient-primary text-white font-bold text-lg flex-shrink-0">
+                                {{ lesson.student.full_name|first }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-gray-900 truncate">{{ lesson.student.full_name }}</h4>
+                                {% with sp=lesson.student.get_profile %}
+                                    {% if sp and sp.gender_identity %}
+                                        <p class="text-xs text-gray-600">{{ sp.get_gender_identity_display }}</p>
+                                    {% endif %}
+                                {% endwith %}
+                                <p class="text-xs text-gray-500">Aula {{ lesson.lesson_number }} de 20</p>
+                            </div>
+                        </div>
+
+                        <!-- Informações da aula -->
+                        <div class="space-y-2 mb-4">
+                            <div class="flex items-center gap-2 text-sm text-gray-700">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="font-medium">{{ lesson.date|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-gray-700">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-medium">{{ lesson.time|time:"H:i" }}</span>
+                            </div>
+                            <div class="flex items-start gap-2 text-sm text-gray-700">
+                                <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span class="flex-1">
+                                    {% if lesson.rua and lesson.numero %}
+                                        {{ lesson.rua }}, {{ lesson.numero }}{% if lesson.bairro %} - {{ lesson.bairro }}{% endif %}
+                                    {% else %}
+                                        {{ lesson.location|default:"Endereço não especificado" }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-gray-700">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                <span class="font-medium">Categoria {{ lesson.vehicle_type }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Botões de ação -->
+                        <div class="flex gap-2">
+                            <button onclick="acceptLesson({{ lesson.id }})" 
+                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 shadow-md">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Aceitar
+                            </button>
+                            <button onclick="rejectLesson({{ lesson.id }})" 
+                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 shadow-md">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Recusar
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div class="bg-white rounded-2xl p-6 shadow-card">
@@ -125,17 +224,16 @@
 
             <div class="bg-white rounded-2xl p-6 shadow-card">
                 <div class="flex items-center justify-between mb-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100">
-                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
+                        <svg class="h-6 w-6 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                         </svg>
                     </div>
-                    <span class="text-sm text-green-600 font-medium">+5%</span>
+                    <span class="text-sm text-green-600 font-medium">{% if stats.average_rating %}⭐ {{ stats.average_rating }}{% else %}—{% endif %}</span>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.hours_worked }}h</h3>
-                <p class="text-sm text-gray-600">Horas Trabalhadas</p>
-                <p class="text-xs text-gray-500 mt-1">Este mês</p>
+                <h3 class="text-2xl font-bold text-gray-900 mb-1">{% if stats.average_rating %}{{ stats.average_rating }}/5.0{% else %}—{% endif %}</h3>
+                <p class="text-sm text-gray-600">Avaliação Média</p>
+                <p class="text-xs text-gray-500 mt-1">Pelos alunos</p>
             </div>
         </div>
 
@@ -219,6 +317,81 @@
                     </div>
                 </div>
             </div>
+
+        <!-- Avaliações Recentes -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-card">
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Avaliações dos Alunos</h2>
+                            <p class="text-gray-600">Feedback recebido após as aulas</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for rating in recent_ratings %}
+                        <div class="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-5 shadow-card border border-purple-100 hover:shadow-lg transition-all">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-full gradient-primary text-white font-bold text-sm">
+                                        {{ rating.student.full_name|first }}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-semibold text-gray-900 truncate">{{ rating.student.full_name }}</h3>
+                                        <p class="text-xs text-gray-600">Aula {{ rating.lesson_number }} de 20</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Nota com estrelas -->
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="flex gap-1">
+                                    {% for i in "12345" %}
+                                        {% if i|add:"0" <= rating.student_rating %}
+                                            <span class="text-yellow-400 text-lg">★</span>
+                                        {% elif i|add:"0" == rating.student_rating|add:"1" and rating.student_rating|stringformat:"d" != rating.student_rating|stringformat:".0f" %}
+                                            <span class="text-yellow-400 text-lg">◐</span>
+                                        {% else %}
+                                            <span class="text-gray-300 text-lg">★</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="font-bold text-gray-900">{{ rating.student_rating }}</span>
+                                <span class="text-xs text-gray-500">/5.0</span>
+                            </div>
+
+                            <!-- Feedback -->
+                            {% if rating.student_feedback %}
+                            <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                <p class="text-sm text-gray-700 line-clamp-3">
+                                    "{{ rating.student_feedback }}"
+                                </p>
+                            </div>
+                            {% else %}
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                <p class="text-sm text-gray-500 italic">
+                                    Sem comentário
+                                </p>
+                            </div>
+                            {% endif %}
+
+                            <p class="text-xs text-gray-500 mt-3">
+                                {{ rating.updated_at|date:"d/m/Y H:i" }}
+                            </p>
+                        </div>
+                        {% empty %}
+                        <div class="col-span-3 text-center py-12 text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                            </svg>
+                            Nenhuma avaliação recebida ainda
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 
@@ -315,6 +488,114 @@
                 });
             }
         });
+
+        // Função para obter o CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Aceitar aula
+        function acceptLesson(lessonId) {
+            if (!confirm('Deseja confirmar esta aula?')) return;
+
+            const button = event.target.closest('button');
+            button.disabled = true;
+            button.innerHTML = '<span class="animate-spin">⏳</span> Confirmando...';
+
+            fetch(`/api/accept-lesson/${lessonId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove o card da tela com animação
+                    const card = document.getElementById(`lesson-card-${lessonId}`);
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        // Verifica se ainda há cards pendentes
+                        const remainingCards = document.querySelectorAll('[id^="lesson-card-"]');
+                        if (remainingCards.length === 0) {
+                            location.reload(); // Recarrega para atualizar a interface
+                        }
+                    }, 300);
+                    
+                    alert('✅ Aula confirmada com sucesso!');
+                } else {
+                    alert('❌ Erro: ' + data.error);
+                    button.disabled = false;
+                    button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Aceitar';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Erro ao confirmar aula');
+                button.disabled = false;
+                button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Aceitar';
+            });
+        }
+
+        // Recusar aula
+        function rejectLesson(lessonId) {
+            if (!confirm('Tem certeza que deseja recusar esta aula? O aluno será notificado.')) return;
+
+            const button = event.target.closest('button');
+            button.disabled = true;
+            button.innerHTML = '<span class="animate-spin">⏳</span> Recusando...';
+
+            fetch(`/api/reject-lesson/${lessonId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove o card da tela com animação
+                    const card = document.getElementById(`lesson-card-${lessonId}`);
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        // Verifica se ainda há cards pendentes
+                        const remainingCards = document.querySelectorAll('[id^="lesson-card-"]');
+                        if (remainingCards.length === 0) {
+                            location.reload(); // Recarrega para atualizar a interface
+                        }
+                    }, 300);
+                    
+                    alert('✅ Aula recusada');
+                } else {
+                    alert('❌ Erro: ' + data.error);
+                    button.disabled = false;
+                    button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> Recusar';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Erro ao recusar aula');
+                button.disabled = false;
+                button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> Recusar';
+            });
+        }
     </script>
 </div>
 {% endblock %}

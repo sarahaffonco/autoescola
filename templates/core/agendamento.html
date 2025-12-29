@@ -70,7 +70,6 @@
                         <option value="">Escolha o tipo</option>
                         <option value="A">🏍️ Categoria A - Motocicleta</option>
                         <option value="B">🚗 Categoria B - Carro</option>
-                        <option value="D">🚌 Categoria D - Ônibus</option>
                     </select>
                 </div>
 
@@ -524,7 +523,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         option.value = instructor.id;
                         const genderLabel = instructor.gender_code ? (instructor.gender_code === 'M' ? '👨' : '👩') : '';
                         const identityLabel = instructor.gender_identity_label ? ` • ${instructor.gender_identity_label}` : '';
-                        option.textContent = `${genderLabel} ${instructor.name}${identityLabel} (⭐ ${instructor.rating.toFixed(1)})`;
+                        const ratingLabel = instructor.rating ? ` ⭐ ${instructor.rating}` : ' ⭐ Novo';
+                        option.textContent = `${genderLabel} ${instructor.name}${identityLabel}${ratingLabel}`;
                         instructorSelect.appendChild(option);
                     });
                 } else {
@@ -611,8 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function getVehicleTypeLabel(type) {
         const types = {
             'A': '🏍️ Categoria A - Motocicleta',
-            'B': '🚗 Categoria B - Carro',
-            'D': '🚌 Categoria D - Ônibus'
+            'B': '🚗 Categoria B - Carro'
         };
         return types[type] || type;
     }
