@@ -19,6 +19,16 @@
             <p class="text-gray-600">
                 Acompanhe seu progresso e próximas aulas
             </p>
+            <div class="mt-4 flex flex-wrap gap-3">
+                <a href="{% url 'agendamento' %}"
+                   class="inline-flex items-center gap-2 px-4 py-2 gradient-primary text-white font-medium rounded-lg shadow-card hover:opacity-90 transition-all">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Agendar aula
+                </a>
+                <a href="{% url 'agendamento' %}" class="hidden"></a>
+            </div>
         </div>
 
         <!-- Progress Banner -->
