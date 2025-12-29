@@ -205,6 +205,23 @@
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
                         </div>
+
+                        <!-- Identidade de Gênero -->
+                        <div>
+                            <label for="id_gender_identity" class="block text-sm font-medium text-gray-700 mb-2">
+                                Identidade de Gênero *
+                            </label>
+                            <select name="gender_identity" id="id_gender_identity" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                                <option value="">Selecione</option>
+                                <option value="CF" {% if form.gender_identity.value == 'CF' %}selected{% endif %}>Cisgênero Feminino</option>
+                                <option value="CM" {% if form.gender_identity.value == 'CM' %}selected{% endif %}>Cisgênero Masculino</option>
+                                <option value="TM" {% if form.gender_identity.value == 'TM' %}selected{% endif %}>Homem Transgênero</option>
+                                <option value="TW" {% if form.gender_identity.value == 'TW' %}selected{% endif %}>Mulher Transgênero</option>
+                            </select>
+                            {% if form.gender_identity.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.gender_identity.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -276,6 +293,23 @@
                                    value="{{ form.id_address_complement.value|default:'' }}"
                                    id="id_address_complement"
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                        </div>
+
+                        <!-- CEP da Base/Garagem -->
+                        <div class="md:col-span-2">
+                            <label for="id_cep_base" class="block text-sm font-medium text-gray-700 mb-2">
+                                CEP da Base/Garagem (local de início das aulas)
+                            </label>
+                            <input type="text" 
+                                   name="cep_base" 
+                                   value="{{ form.cep_base.value|default:'' }}"
+                                   id="id_cep_base" 
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                                   placeholder="00000-000" maxlength="9">
+                            <p class="mt-1 text-sm text-gray-500">Ajuda a encontrar alunos próximos. Opcional.</p>
+                            {% if form.cep_base.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cep_base.errors.0 }}</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -648,6 +682,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const cepInput = document.getElementById('id_cep');
     const addressInput = document.getElementById('id_address');
+    const cepBaseInput = document.getElementById('id_cep_base');
     
     if (cepInput) {
         cepInput.addEventListener('input', function(e) {
@@ -768,6 +803,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (plateInput) {
         plateInput.addEventListener('input', function(e) {
             e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        });
+    }
+
+    // Máscara para CEP da Base
+    if (cepBaseInput) {
+        cepBaseInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 8) value = value.substring(0, 8);
+            if (value.length > 5) {
+                e.target.value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            } else {
+                e.target.value = value;
+            }
         });
     }
 

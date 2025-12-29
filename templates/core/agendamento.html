@@ -17,7 +17,7 @@
 
         <!-- Form -->
         <div class="bg-white rounded-2xl p-8 shadow-card">
-            <form method="post" class="space-y-6">
+            <form id="agendamento-form" method="post" class="space-y-6">
                 {% csrf_token %}
                 
                 <!-- Date Selection -->
@@ -55,25 +55,6 @@
                     </select>
                 </div>
 
-                <!-- Instructor Selection -->
-                <div>
-                    <label for="id_instructor" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        Escolha seu Instrutor
-                    </label>
-                    <select name="instructor" 
-                            id="id_instructor" 
-                            required
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-                        <option value="">Escolha um instrutor</option>
-                        {% for instructor in instructors %}
-                        <option value="{{ instructor.id }}">{{ instructor.full_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
                 <!-- Vehicle Type -->
                 <div>
                     <label for="id_vehicle_type" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -93,59 +74,171 @@
                     </select>
                 </div>
 
-                <!-- Vehicle Selection -->
-                <div>
-                    <label for="id_vehicle" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <!-- Location Section -->
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        </svg>
+                        Local de Encontro - Passo 1: CEP
+                    </h3>
+                    
+                    <!-- CEP Input -->
+                    <div class="flex gap-2">
+                        <input type="text" 
+                               name="cep" 
+                               id="id_cep" 
+                               placeholder="00000-000"
+                               maxlength="9"
+                               required
+                               class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                               autocomplete="postal-code">
+                        <button type="button" 
+                                id="search-cep-btn"
+                                class="px-4 py-3 bg-primary text-white font-medium rounded-lg hover:bg-opacity-90 transition-all flex items-center gap-2">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Buscar
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-2">Insira o CEP para encontrar instrutores próximos e preencher o endereço automaticamente</p>
+
+                    <!-- Address fields -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                        <input type="text" 
+                               name="rua" 
+                               id="id_rua" 
+                               placeholder="Rua"
+                               readonly
+                               class="px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-700">
+                        <input type="text" 
+                               name="numero" 
+                               id="id_numero" 
+                               placeholder="Número"
+                               maxlength="10"
+                               required
+                               class="px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        <input type="text" 
+                               name="bairro" 
+                               id="id_bairro" 
+                               placeholder="Bairro"
+                               readonly
+                               class="px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-700">
+                        <input type="text" 
+                               name="cidade" 
+                               id="id_cidade" 
+                               placeholder="Cidade"
+                               readonly
+                               class="px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-700">
+                    </div>
+
+                    <input type="text" 
+                           name="estado" 
+                           id="id_estado" 
+                           placeholder="Estado"
+                           maxlength="2"
+                           readonly
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-700 mt-3">
+
+                    <!-- CEP Feedback -->
+                    <div id="cep-error" class="hidden text-sm text-red-600 flex items-center gap-2 mt-3">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M13 13H11V7h2m0 8H11v2h2M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+                        </svg>
+                        <span id="cep-error-msg"></span>
+                    </div>
+                    <div id="cep-success" class="hidden text-sm text-green-600 flex items-center gap-2 mt-3">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                        </svg>
+                        <span>Endereço encontrado! Agora selecione seu instrutor preferido.</span>
+                    </div>
+                </div>
+
+                <!-- Instructor Filters Section -->
+                <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Passo 2: Escolha seu Instrutor
+                    </h3>
+
+                    <!-- Gender Filter -->
+                    <div class="mb-4">
+                        <label class="text-sm font-medium text-gray-700 mb-2 block">Preferência de Gênero</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" class="gender-filter px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-primary transition-all" data-gender="">
+                                Indiferente
+                            </button>
+                            <button type="button" class="gender-filter px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-primary transition-all" data-gender="M">
+                                👨 Masculino
+                            </button>
+                            <button type="button" class="gender-filter px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-primary transition-all" data-gender="F">
+                                👩 Feminino
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <label class="text-xs font-medium text-gray-600 mb-1 block">Preferência de Identidade (opcional)</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button type="button" class="identity-filter px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-primary transition-all" data-identity="CF" data-map="F">CF • Cisgênero Feminino</button>
+                                <button type="button" class="identity-filter px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-primary transition-all" data-identity="CM" data-map="M">CM • Cisgênero Masculino</button>
+                                <button type="button" class="identity-filter px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-primary transition-all" data-identity="TM" data-map="M">TM • Homem Transgênero</button>
+                                <button type="button" class="identity-filter px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-primary transition-all" data-identity="TW" data-map="F">TW • Mulher Transgênero</button>
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">Usamos a identidade para exibir; a busca considera o gênero correspondente.</p>
+                        </div>
+                    </div>
+
+                    <!-- Instructor Selection -->
+                    <div>
+                        <label for="id_instructor" class="block text-sm font-medium text-gray-700 mb-2">Instrutores Disponíveis</label>
+                        <select name="instructor" 
+                                id="id_instructor" 
+                                required
+                                disabled
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed">
+                            <option value="">Busque um CEP primeiro...</option>
+                        </select>
+                        <p class="text-xs text-gray-600 mt-2">Selecione um instrutor próximo a você</p>
+                    </div>
+                </div>
+
+                <!-- Vehicle Preferences Section -->
+                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 13h2l1 3h12l1-3h2M5 13l1-3h12l1 3M7 16h10a2 2 0 002-2V9a2 2 0 00-2-2H7a2 2 0 00-2 2v5a2 2 0 002 2z"></path>
                         </svg>
-                        Selecionar Modelo do Veículo (opcional)
-                    </label>
-                    <select name="vehicle"
-                            id="id_vehicle"
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-                        <option value="">Deixar para a autoescola definir</option>
-                        {% for v in vehicles %}
-                        <option value="{{ v.id }}">
-                            {{ v.make }} {{ v.model }} ({{ v.year }}) - Placa {{ v.plate }}
-                            {% if v.dual_control %} • Duplo{% endif %}
-                            {% if v.adapted_pcd %} • PCD{% endif %}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <p class="text-xs text-gray-500 mt-2">Os veículos marcados com "Duplo" possuem acionamento duplo, e "PCD" são adaptados para pessoas com deficiência.</p>
-                </div>
+                        Passo 3: Selecione o Veículo e Preferências
+                    </h3>
 
-                <!-- Preferences -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label class="flex items-center gap-3 p-4 border rounded-lg">
-                        <input type="checkbox" name="prefer_dual_control" id="id_prefer_dual_control" class="h-4 w-4 text-primary border-gray-300 rounded">
-                        <span class="text-sm text-gray-700">Preferir veículo com acionamento duplo</span>
-                    </label>
-                    <label class="flex items-center gap-3 p-4 border rounded-lg">
-                        <input type="checkbox" name="prefer_adapted_pcd" id="id_prefer_adapted_pcd" class="h-4 w-4 text-primary border-gray-300 rounded">
-                        <span class="text-sm text-gray-700">Preferir veículo adaptado para PCD</span>
-                    </label>
-                </div>
+                    <!-- Vehicle Selection -->
+                    <div class="mb-4">
+                        <label for="id_vehicle" class="block text-sm font-medium text-gray-700 mb-2">Modelo do Veículo</label>
+                        <select name="vehicle"
+                                id="id_vehicle"
+                                disabled
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed">
+                            <option value="">Selecione um instrutor primeiro...</option>
+                        </select>
+                    </div>
 
-                <!-- Location -->
-                <div>
-                    <label for="id_location" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                        <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Local de Encontro
-                    </label>
-                    <select name="location" 
-                            id="id_location" 
-                            required
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-                        <option value="">Escolha o local</option>
-                        {% for location in locations %}
-                        <option value="{{ location }}">{{ location }}</option>
-                        {% endfor %}
-                    </select>
+                    <!-- Vehicle Preferences Checkboxes -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="flex items-center gap-3 p-4 border rounded-lg hover:bg-white transition-all cursor-pointer">
+                            <input type="checkbox" name="prefer_dual_control" id="id_prefer_dual_control" class="h-4 w-4 text-primary border-gray-300 rounded">
+                            <span class="text-sm text-gray-700">Preferir acionamento duplo<br><span class="text-xs text-gray-500">(pedais de parada no passageiro)</span></span>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 border rounded-lg hover:bg-white transition-all cursor-pointer">
+                            <input type="checkbox" name="prefer_adapted_pcd" id="id_prefer_adapted_pcd" class="h-4 w-4 text-primary border-gray-300 rounded">
+                            <span class="text-sm text-gray-700">Preferir adaptado para PCD<br><span class="text-xs text-gray-500">(pessoas com deficiência)</span></span>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -154,7 +247,8 @@
                        class="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all">
                         Voltar
                     </a>
-                    <button type="submit" 
+                    <button type="button" 
+                            id="preview-btn"
                             class="px-6 py-3 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card flex items-center gap-2">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -163,6 +257,106 @@
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- Summary Modal -->
+        <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                <!-- Modal Header -->
+                <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Resumo do Agendamento
+                    </h2>
+                    <p class="text-blue-100 mt-1">Verifique suas informações antes de confirmar</p>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="p-6 space-y-6">
+                    <!-- Date & Time -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <p class="text-xs text-gray-600 uppercase font-semibold mb-1">Data</p>
+                            <p class="text-lg font-bold text-gray-900" id="summary-date">-</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <p class="text-xs text-gray-600 uppercase font-semibold mb-1">Horário</p>
+                            <p class="text-lg font-bold text-gray-900" id="summary-time">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Instructor -->
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <p class="text-xs text-gray-600 uppercase font-semibold mb-1">👨‍🏫 Instrutor</p>
+                        <p class="text-lg font-bold text-gray-900" id="summary-instructor">-</p>
+                        <p class="text-xs text-gray-600 mt-2">Preferência de Instrutor: <span class="text-gray-900" id="summary-instructor-pref">Indiferente</span></p>
+                    </div>
+
+                    <!-- Vehicle Type & Model -->
+                    <div class="space-y-3">
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <p class="text-xs text-gray-600 uppercase font-semibold mb-1">🚗 Tipo de Veículo</p>
+                            <p class="text-lg font-bold text-gray-900" id="summary-vehicle-type">-</p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <p class="text-xs text-gray-600 uppercase font-semibold mb-1">🏎️ Modelo do Veículo</p>
+                            <p class="text-lg font-bold text-gray-900" id="summary-vehicle">Autoescola definirá</p>
+                            <p class="text-sm text-gray-600 mt-1" id="summary-vehicle-details"></p>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <p class="text-xs text-gray-600 uppercase font-semibold mb-2">📍 Local de Encontro</p>
+                        <p class="text-sm text-gray-900">
+                            <span id="summary-rua">-</span>, 
+                            <span id="summary-numero">-</span><br>
+                            <span id="summary-bairro">-</span> - 
+                            <span id="summary-cidade">-</span>, 
+                            <span id="summary-estado">-</span><br>
+                            <span class="text-xs text-gray-600">CEP: <span id="summary-cep">-</span></span>
+                        </p>
+                    </div>
+
+                    <!-- Preferences -->
+                    <div class="bg-indigo-50 rounded-lg p-4">
+                        <p class="text-xs text-gray-600 uppercase font-semibold mb-3">⚙️ Preferências</p>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2" id="summary-pref-dual">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                <span class="text-gray-700">Não quer acionamento duplo</span>
+                            </div>
+                            <div class="flex items-center gap-2" id="summary-pref-pcd">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                <span class="text-gray-700">Não quer adaptação PCD</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex items-center justify-between gap-4">
+                    <button type="button" 
+                            id="cancel-summary-btn"
+                            class="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all">
+                        ← Voltar e Editar
+                    </button>
+                    <button type="button" 
+                            id="confirm-summary-btn"
+                            class="px-6 py-3 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card flex items-center gap-2">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Confirmar e Agendar
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Info Card -->
@@ -182,4 +376,374 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('agendamento-form');
+    const previewBtn = document.getElementById('preview-btn');
+    const summaryModal = document.getElementById('summary-modal');
+    const cancelBtn = document.getElementById('cancel-summary-btn');
+    const confirmBtn = document.getElementById('confirm-summary-btn');
+    
+    // CEP Lookup
+    const cepInput = document.getElementById('id_cep');
+    const searchCepBtn = document.getElementById('search-cep-btn');
+    const cepErrorEl = document.getElementById('cep-error');
+    const cepSuccessEl = document.getElementById('cep-success');
+    const cepErrorMsg = document.getElementById('cep-error-msg');
+
+    // Instructor Filter Elements
+    const genderFilters = document.querySelectorAll('.gender-filter');
+    const identityFilters = document.querySelectorAll('.identity-filter');
+    const instructorSelect = document.getElementById('id_instructor');
+    const vehicleSelect = document.getElementById('id_vehicle');
+    const vehicleTypeSelect = document.getElementById('id_vehicle_type');
+
+    let currentGender = '';
+    let currentIdentity = '';
+    let currentCEP = '';
+
+    // Formatar CEP com hífen
+    function formatCEP(value) {
+        value = value.replace(/\D/g, '');
+        if (value.length > 5) {
+            value = value.slice(0, 5) + '-' + value.slice(5, 8);
+        }
+        return value;
+    }
+
+    // Auto-format CEP input
+    cepInput.addEventListener('input', function() {
+        this.value = formatCEP(this.value);
+    });
+
+    // Gender filter buttons
+    genderFilters.forEach(btn => {
+        btn.addEventListener('click', function() {
+            genderFilters.forEach(b => b.classList.remove('border-primary', 'bg-primary', 'text-white'));
+            this.classList.add('border-primary', 'bg-primary', 'text-white');
+            currentGender = this.getAttribute('data-gender');
+            // Reset identity selection when binary gender changes
+            identityFilters.forEach(b => b.classList.remove('border-primary', 'bg-primary', 'text-white'));
+            currentIdentity = '';
+            
+            if (currentCEP) {
+                loadInstructors();
+            }
+        });
+    });
+
+    // Identity filter buttons (maps to binary gender for API)
+    identityFilters.forEach(btn => {
+        btn.addEventListener('click', function() {
+            identityFilters.forEach(b => b.classList.remove('border-primary', 'bg-primary', 'text-white'));
+            this.classList.add('border-primary', 'bg-primary', 'text-white');
+            currentIdentity = this.getAttribute('data-identity');
+            // Map identity to M/F for filtering
+            currentGender = this.getAttribute('data-map') || '';
+            // Reflect mapped gender selection visually
+            genderFilters.forEach(b => {
+                const g = b.getAttribute('data-gender');
+                b.classList.toggle('border-primary', g === currentGender);
+                b.classList.toggle('bg-primary', g === currentGender);
+                b.classList.toggle('text-white', g === currentGender);
+            });
+            if (currentCEP) {
+                loadInstructors();
+            }
+        });
+    });
+
+    // Search CEP
+    searchCepBtn.addEventListener('click', function() {
+        const cepValue = cepInput.value.trim();
+        
+        if (!cepValue || cepValue.length !== 9) {
+            showCepError('CEP inválido. Use o formato: 00000-000');
+            return;
+        }
+
+        searchCepBtn.disabled = true;
+        searchCepBtn.innerHTML = '<svg class="h-4 w-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Buscando...';
+        cepErrorEl.classList.add('hidden');
+        cepSuccessEl.classList.add('hidden');
+
+        fetch(`/api/lookup-cep/?cep=${encodeURIComponent(cepValue)}`)
+            .then(response => response.json())
+            .then(data => {
+                searchCepBtn.disabled = false;
+                searchCepBtn.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Buscar';
+                
+                if (data.success) {
+                    document.getElementById('id_rua').value = data.rua;
+                    document.getElementById('id_bairro').value = data.bairro;
+                    document.getElementById('id_cidade').value = data.cidade;
+                    document.getElementById('id_estado').value = data.estado;
+                    cepInput.value = data.cep;
+                    
+                    currentCEP = data.cep.replace('-', '');
+                    
+                    cepErrorEl.classList.add('hidden');
+                    cepSuccessEl.classList.remove('hidden');
+                    document.getElementById('id_numero').focus();
+                    
+                    // Carrega instrutores baseado no CEP e gênero
+                    loadInstructors();
+                } else {
+                    showCepError(data.error || 'CEP não encontrado');
+                }
+            })
+            .catch(error => {
+                searchCepBtn.disabled = false;
+                searchCepBtn.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Buscar';
+                showCepError('Erro ao buscar CEP. Tente novamente.');
+                console.error('CEP lookup error:', error);
+            });
+    });
+
+    // Allow Enter key to search CEP
+    cepInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchCepBtn.click();
+        }
+    });
+
+    function showCepError(message) {
+        cepErrorMsg.textContent = message;
+        cepErrorEl.classList.remove('hidden');
+        cepSuccessEl.classList.add('hidden');
+    }
+
+    // Carrega instrutores baseado em CEP e gênero
+    function loadInstructors() {
+        const params = new URLSearchParams({
+            cep: currentCEP,
+            gender: currentGender
+        });
+
+        instructorSelect.disabled = true;
+        instructorSelect.innerHTML = '<option value="">Carregando instrutores...</option>';
+
+        fetch(`/api/filter-instructors/?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                instructorSelect.disabled = false;
+                instructorSelect.innerHTML = '<option value="">Selecione um instrutor</option>';
+
+                if (data.instructors && data.instructors.length > 0) {
+                    data.instructors.forEach(instructor => {
+                        const option = document.createElement('option');
+                        option.value = instructor.id;
+                        const genderLabel = instructor.gender_code ? (instructor.gender_code === 'M' ? '👨' : '👩') : '';
+                        const identityLabel = instructor.gender_identity_label ? ` • ${instructor.gender_identity_label}` : '';
+                        option.textContent = `${genderLabel} ${instructor.name}${identityLabel} (⭐ ${instructor.rating.toFixed(1)})`;
+                        instructorSelect.appendChild(option);
+                    });
+                } else {
+                    instructorSelect.innerHTML = '<option value="">Nenhum instrutor encontrado nesta região</option>';
+                }
+            })
+            .catch(error => {
+                instructorSelect.disabled = false;
+                instructorSelect.innerHTML = '<option value="">Erro ao carregar instrutores</option>';
+                console.error('Instructor filter error:', error);
+            });
+    }
+
+    // Quando instrutor é selecionado, carrega seus veículos
+    instructorSelect.addEventListener('change', function() {
+        if (!this.value) {
+            vehicleSelect.disabled = true;
+            vehicleSelect.innerHTML = '<option value="">Selecione um instrutor primeiro...</option>';
+            return;
+        }
+
+        vehicleSelect.disabled = true;
+        vehicleSelect.innerHTML = '<option value="">Carregando veículos...</option>';
+
+        const params = new URLSearchParams({
+            instructor_id: this.value,
+            vehicle_type: vehicleTypeSelect.value || '',
+            prefer_dual: document.getElementById('id_prefer_dual_control').checked,
+            prefer_pcd: document.getElementById('id_prefer_adapted_pcd').checked
+        });
+
+        fetch(`/api/filter-vehicles/?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                vehicleSelect.disabled = false;
+                vehicleSelect.innerHTML = '<option value="">Qualquer modelo disponível</option>';
+
+                if (data.vehicles && data.vehicles.length > 0) {
+                    data.vehicles.forEach(vehicle => {
+                        const option = document.createElement('option');
+                        option.value = vehicle.id;
+                        let display = `${vehicle.make} ${vehicle.model} (${vehicle.year})`;
+                        if (vehicle.dual_control) display += ' • Duplo';
+                        if (vehicle.adapted_pcd) display += ' • PCD';
+                        option.textContent = display;
+                        vehicleSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                vehicleSelect.disabled = false;
+                vehicleSelect.innerHTML = '<option value="">Erro ao carregar veículos</option>';
+                console.error('Vehicle filter error:', error);
+            });
+    });
+
+    // Quando preferências mudam, recarrega veículos
+    document.getElementById('id_prefer_dual_control').addEventListener('change', () => {
+        if (instructorSelect.value) {
+            instructorSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    document.getElementById('id_prefer_adapted_pcd').addEventListener('change', () => {
+        if (instructorSelect.value) {
+            instructorSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    vehicleTypeSelect.addEventListener('change', () => {
+        if (instructorSelect.value) {
+            instructorSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Formatar data para exibição
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Formatar tipo de veículo
+    function getVehicleTypeLabel(type) {
+        const types = {
+            'A': '🏍️ Categoria A - Motocicleta',
+            'B': '🚗 Categoria B - Carro',
+            'D': '🚌 Categoria D - Ônibus'
+        };
+        return types[type] || type;
+    }
+
+    // Preencher resumo
+    function populateSummary() {
+        // Data e Hora
+        const dateInput = document.getElementById('id_date');
+        const timeInput = document.getElementById('id_time');
+        document.getElementById('summary-date').textContent = formatDate(dateInput.value);
+        document.getElementById('summary-time').textContent = timeInput.value || '-';
+
+        // Instrutor
+        const instructorOption = instructorSelect.options[instructorSelect.selectedIndex];
+        document.getElementById('summary-instructor').textContent = instructorOption.text || '-';
+
+        // Tipo de Veículo
+        document.getElementById('summary-vehicle-type').textContent = getVehicleTypeLabel(vehicleTypeSelect.value);
+
+        // Modelo de Veículo
+        const vehicleOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+        if (vehicleSelect.value) {
+            document.getElementById('summary-vehicle').textContent = vehicleOption.text || 'Veículo';
+            document.getElementById('summary-vehicle-details').textContent = '';
+        } else {
+            document.getElementById('summary-vehicle').textContent = 'Autoescola definirá';
+            document.getElementById('summary-vehicle-details').textContent = '';
+        }
+
+        // Localização (CEP)
+        const cepInput = document.getElementById('id_cep');
+        const ruaInput = document.getElementById('id_rua');
+        const numeroInput = document.getElementById('id_numero');
+        const bairroInput = document.getElementById('id_bairro');
+        const cidadeInput = document.getElementById('id_cidade');
+        const estadoInput = document.getElementById('id_estado');
+
+        document.getElementById('summary-cep').textContent = cepInput.value || '-';
+        document.getElementById('summary-rua').textContent = ruaInput.value || '-';
+        document.getElementById('summary-numero').textContent = numeroInput.value || '-';
+        document.getElementById('summary-bairro').textContent = bairroInput.value || '-';
+        document.getElementById('summary-cidade').textContent = cidadeInput.value || '-';
+        document.getElementById('summary-estado').textContent = estadoInput.value || '-';
+
+        // Preferências
+        const dualControl = document.getElementById('id_prefer_dual_control').checked;
+        const adaptedPcd = document.getElementById('id_prefer_adapted_pcd').checked;
+
+        const dualPrefEl = document.getElementById('summary-pref-dual');
+        const pcdPrefEl = document.getElementById('summary-pref-pcd');
+
+        if (dualControl) {
+            dualPrefEl.innerHTML = '<svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg><span class="text-gray-900 font-medium">Preferir acionamento duplo</span>';
+        } else {
+            dualPrefEl.innerHTML = '<svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><span class="text-gray-700">Sem preferência por acionamento duplo</span>';
+        }
+
+        if (adaptedPcd) {
+            pcdPrefEl.innerHTML = '<svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg><span class="text-gray-900 font-medium">Preferir veículo adaptado para PCD</span>';
+        } else {
+            pcdPrefEl.innerHTML = '<svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><span class="text-gray-700">Sem preferência por adaptação PCD</span>';
+        }
+
+        // Preferência de gênero/identidade (exibição)
+        const summaryInstructorPref = document.getElementById('summary-instructor-pref');
+        if (summaryInstructorPref) {
+            let prefText = 'Indiferente';
+            if (currentIdentity) {
+                const identityMap = {
+                    'CF': 'Cisgênero Feminino',
+                    'CM': 'Cisgênero Masculino',
+                    'TM': 'Homem Transgênero',
+                    'TW': 'Mulher Transgênero'
+                };
+                prefText = identityMap[currentIdentity] || prefText;
+            } else if (currentGender === 'M') {
+                prefText = 'Masculino';
+            } else if (currentGender === 'F') {
+                prefText = 'Feminino';
+            }
+            summaryInstructorPref.textContent = prefText;
+        }
+    }
+
+    // Abrir modal de resumo
+    previewBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        // Validar formulário
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        populateSummary();
+        summaryModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    });
+
+    // Fechar modal
+    cancelBtn.addEventListener('click', function() {
+        summaryModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    });
+
+    // Confirmar agendamento
+    confirmBtn.addEventListener('click', function() {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<svg class="h-4 w-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Processando...';
+        form.submit();
+    });
+
+    // Fechar modal ao clicar fora
+    summaryModal.addEventListener('click', function(e) {
+        if (e.target === summaryModal) {
+            summaryModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -7,8 +7,13 @@
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="mb-8 animate-fade-in">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                Olá, Instrutor {{ user.full_name }}! 👋
+            <h1 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                <span>Olá, Instrutor {{ user.full_name }}! 👋</span>
+                {% if profile and profile.gender_identity %}
+                <span class="rounded-full bg-purple-100 text-purple-700 px-2 py-1 text-sm">
+                    {{ profile.get_gender_identity_display }}
+                </span>
+                {% endif %}
             </h1>
             <p class="text-gray-600">
                 Confira suas aulas e métricas do dia
@@ -156,6 +161,11 @@
                                     </div>
                                     <div>
                                         <h3 class="font-semibold text-gray-900">{{ lesson.student.full_name }}</h3>
+                                        {% with sp=lesson.student.get_profile %}
+                                            {% if sp and sp.gender_identity %}
+                                                <p class="text-xs text-gray-600">{{ sp.get_gender_identity_display }}</p>
+                                            {% endif %}
+                                        {% endwith %}
                                         <p class="text-sm text-gray-600">Aula {{ lesson.lesson_number }} de 20</p>
                                     </div>
                                 </div>

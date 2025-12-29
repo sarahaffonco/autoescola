@@ -32,7 +32,15 @@ class Lesson(models.Model):
     date = models.DateField()
     time = models.TimeField()
     duration = models.IntegerField(default=50, help_text="Duração em minutos")
-    location = models.CharField(max_length=255)
+    # Campos de localização baseados em CEP
+    cep = models.CharField(max_length=9, verbose_name="CEP", blank=True)
+    rua = models.CharField(max_length=255, verbose_name="Rua", blank=True)
+    numero = models.CharField(max_length=10, verbose_name="Número")
+    bairro = models.CharField(max_length=100, verbose_name="Bairro", blank=True)
+    cidade = models.CharField(max_length=100, verbose_name="Cidade", blank=True)
+    estado = models.CharField(max_length=2, verbose_name="Estado", blank=True)
+    # Campo legado para compatibilidade
+    location = models.CharField(max_length=255, blank=True)
     vehicle_type = models.CharField(max_length=1, choices=VEHICLE_TYPE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     score = models.CharField(max_length=50, blank=True, help_text="Avaliação da aula")
