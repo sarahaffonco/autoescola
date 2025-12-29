@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from datetime import date, timedelta
 from lessons.models import Lesson
+import requests
 
 
 @login_required
@@ -131,4 +133,137 @@ def agendamento(request):
     }
     
     return render(request, 'core/agendamento.html', context)
+
+
+@login_required
+def lookup_cep(request):
+    """API endpoint para buscar endereço pelo CEP"""
+    cep = request.GET.get('cep', '').strip()
+    
+    if not cep or len(cep.replace('-', '')) != 8:
+        return JsonResponse({'error': 'CEP inválido'}, status=400)
+    
+    # Formata o CEP
+    cep_formatted = cep.replace('-', '')
+    cep_display = f"{cep_formatted[:5]}-{cep_formatted[5:]}"
+    
+    try:
+        # Usa a API ViaCEP para buscar o endereço
+        response = requests.get(f'https://viacep.com.br/ws/{cep_formatted}/json/', timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        
+        if 'erro' in data:
+            return JsonResponse({'error': 'CEP não encontrado'}, status=404)
+        
+        return JsonResponse({
+            'success': True,
+            'cep': cep_display,
+            'rua': data.get('logradouro', ''),
+            'bairro': data.get('bairro', ''),
+            'cidade': data.get('localidade', ''),
+            'estado': data.get('uf', ''),
+        })
+    except requests.RequestException as e:
+        return JsonResponse({'error': f'Erro ao buscar CEP: {str(e)}'}, status=500)
+
+
+def filter_instructors(request):
+    """API endpoint para filtrar instrutores por CEP e gênero"""
+    from accounts.models import InstructorProfile, User
+    
+    cep = request.GET.get('cep', '').strip()
+    gender = request.GET.get('gender', '')
+    
+    if not cep or len(cep.replace('-', '')) != 8:
+        return JsonResponse({'error': 'CEP inválido'}, status=400)
+    
+    # Remove formatação do CEP
+    cep_clean = cep.replace('-', '')
+    
+    # Filtra instrutores ativos
+    instructors_base = User.objects.filter(
+        role='instrutor',
+        is_active=True,
+    ).exclude(instructorprofile_profile__status__in=['inativo', 'suspenso'])
+    instructors_base = instructors_base.select_related('instructorprofile_profile')
+    
+    # Filtra por gênero se fornecido
+    if gender in ['M', 'F']:
+        instructors_base = instructors_base.filter(instructorprofile_profile__gender=gender)
+    
+    # Filtra por proximidade de CEP (simples: mesmo 5 primeiros dígitos ou CEP exato)
+    # Uma implementação mais robusta usaria GeoDjango
+    if cep_clean:
+        cep_prefix = cep_clean[:5]
+        nearby = instructors_base.filter(instructorprofile_profile__cep_base__startswith=cep_prefix)
+        no_cep = instructors_base.filter(instructorprofile_profile__cep_base='')
+        instructors = (nearby | no_cep).distinct()
+    else:
+        instructors = instructors_base
+    
+    # Serializa resultados
+    result = []
+    for instructor in instructors[:20]:  # Máximo 20 instrutores
+        profile = instructor.instructorprofile_profile
+        result.append({
+            'id': instructor.id,
+            'name': instructor.full_name,
+            'gender': profile.get_gender_display() if profile.gender else 'Não informado',
+            'gender_code': profile.gender,
+            'gender_identity': profile.gender_identity,
+            'gender_identity_label': profile.get_gender_identity_display() if profile.gender_identity else None,
+            'rating': profile.rating,
+            'vehicle_id': profile.vehicle.id if profile.vehicle else None,
+        })
+    
+    return JsonResponse({'instructors': result})
+
+
+def filter_vehicles(request):
+    """API endpoint para filtrar veículos por instrutor e preferências"""
+    from accounts.models import InstructorVehicle
+    
+    instructor_id = request.GET.get('instructor_id')
+    vehicle_type = request.GET.get('vehicle_type', '')
+    prefer_dual = request.GET.get('prefer_dual') == 'true'
+    prefer_pcd = request.GET.get('prefer_pcd') == 'true'
+    
+    if not instructor_id:
+        return JsonResponse({'error': 'Instrutor não especificado'}, status=400)
+    
+    try:
+        # Filtra veículos do instrutor específico
+        vehicles = InstructorVehicle.objects.filter(
+            instructor__user_id=instructor_id
+        )
+        
+        # Filtra por tipo de veículo (categoria A, B, D)
+        # Por enquanto, apenas retorna o veículo do instrutor
+        # se tiver múltiplos, podem ser filtrados aqui
+        
+        result = []
+        for vehicle in vehicles:
+            item = {
+                'id': vehicle.id,
+                'plate': vehicle.plate,
+                'make': vehicle.make,
+                'model': vehicle.model,
+                'year': vehicle.year,
+                'dual_control': vehicle.dual_control,
+                'adapted_pcd': vehicle.adapted_pcd,
+                'display': f"{vehicle.make} {vehicle.model} ({vehicle.year})"
+            }
+            
+            # Filtra por preferências se especificadas
+            if prefer_dual and not vehicle.dual_control:
+                continue
+            if prefer_pcd and not vehicle.adapted_pcd:
+                continue
+            
+            result.append(item)
+        
+        return JsonResponse({'vehicles': result})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 

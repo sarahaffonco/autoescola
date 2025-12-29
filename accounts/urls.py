@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .delete_views import delete_account_view
 
 urlpatterns = [
     # Autenticação
@@ -20,4 +21,7 @@ urlpatterns = [
     # Perfil
     path('profile/', views.profile_view, name='profile'),
     path('edit-profile/', views.edit_profile_view, name='edit_profile'),
+
+    # Exclusão de cadastro
+    path('delete-account/', delete_account_view, name='delete_account'),
 ]

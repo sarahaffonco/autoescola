@@ -386,6 +386,97 @@
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 4000);
     }
+
+    // --- 6. Funções para Modal de Exclusão de Conta ---
+    function openDeleteModal() {
+        const m = document.getElementById('deleteConfirmModal');
+        if (m) m.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        const m = document.getElementById('deleteConfirmModal');
+        if (m) m.classList.add('hidden');
+    }
+
+    function toggleDeleteEnabled() {
+        const pwd = document.getElementById('del_password');
+        const txt = document.getElementById('del_confirm_text');
+        const ack = document.getElementById('del_ack');
+        const btn = document.getElementById('confirmDeleteBtn');
+        
+        if (!pwd || !txt || !ack || !btn) return;
+        
+        const pwdValue = pwd.value.trim();
+        const txtValue = txt.value.trim().toUpperCase();
+        const ackChecked = ack.checked;
+        
+        btn.disabled = !(pwdValue && txtValue === 'EXCLUIR' && ackChecked);
+    }
+
+    function attachDeleteModalListeners() {
+        const elements = ['del_password', 'del_confirm_text', 'del_ack'];
+        elements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const eventType = id === 'del_ack' ? 'change' : 'input';
+                el.addEventListener(eventType, toggleDeleteEnabled);
+            }
+        });
+    }
+
+    async function submitDeleteAccount() {
+        const delErrors = document.getElementById('del_errors');
+        if (!delErrors) return;
+        
+        delErrors.classList.add('hidden');
+        delErrors.innerHTML = '';
+
+        const form = document.getElementById('editProfileForm');
+        const csrfInput = form && form.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : '';
+
+        const formData = new FormData();
+        const delPassword = document.getElementById('del_password');
+        const delConfirmText = document.getElementById('del_confirm_text');
+        const delAck = document.getElementById('del_ack');
+        
+        if (delPassword) formData.append('password', delPassword.value);
+        if (delConfirmText) formData.append('confirm_text', delConfirmText.value);
+        if (delAck) formData.append('ack', delAck.checked ? '1' : '0');
+
+        try {
+            const resp = await fetch('/auth/delete-account/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken },
+                body: formData
+            });
+            const data = await resp.json();
+            if (data.success) {
+                window.location.href = data.redirect_url || '/auth/login/';
+                return;
+            }
+            // Mostrar erros
+            const messages = [];
+            if (data.message) messages.push(data.message);
+            if (data.errors) {
+                Object.values(data.errors).forEach(v => messages.push(v));
+            }
+            if (messages.length) {
+                delErrors.innerHTML = messages.map(m => `<p>${m}</p>`).join('');
+                delErrors.classList.remove('hidden');
+            }
+        } catch (e) {
+            delErrors.innerHTML = '<p>Erro inesperado ao excluir. Tente novamente.</p>';
+            delErrors.classList.remove('hidden');
+        }
+    }
+
+    // Chama attachDeleteModalListeners quando o formulário é carregado
+    const originalInitializeFormValidation = window.initializeFormValidation;
+    window.initializeFormValidation = function() {
+        originalInitializeFormValidation.call(this);
+        attachDeleteModalListeners();
+    };
     </script>
 
 

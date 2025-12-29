@@ -160,6 +160,12 @@ class BaseProfile(models.Model):
 
 class StudentProfile(BaseProfile):
     """Perfil específico para alunos"""
+    GENDER_IDENTITY_CHOICES = (
+        ('CF', 'Cisgênero Feminino'),
+        ('CM', 'Cisgênero Masculino'),
+        ('TM', 'Homem Transgênero'),
+        ('TW', 'Mulher Transgênero'),
+    )
     STATUS_CHOICES = (
         ('ativo', 'Ativo'),
         ('inativo', 'Inativo'),
@@ -194,6 +200,13 @@ class StudentProfile(BaseProfile):
     observation = models.TextField(
         blank=True,
         verbose_name="Observações"
+    )
+    gender_identity = models.CharField(
+        max_length=2,
+        choices=GENDER_IDENTITY_CHOICES,
+        verbose_name="Identidade de gênero",
+        blank=True,
+        help_text="Informação de identidade de gênero do aluno"
     )
     
     # Documentos de suporte opcionais
@@ -256,6 +269,17 @@ class InstructorProfile(BaseProfile):
         ('suspenso', 'Suspenso'),
     )
     
+    GENDER_CHOICES = (
+        ('M', 'Masculino'),
+        ('F', 'Feminino'),
+    )
+    GENDER_IDENTITY_CHOICES = (
+        ('CF', 'Cisgênero Feminino'),
+        ('CM', 'Cisgênero Masculino'),
+        ('TM', 'Homem Transgênero'),
+        ('TW', 'Mulher Transgênero'),
+    )
+    
     # Campos específicos do instrutor
     cnh = models.CharField(
         max_length=30, 
@@ -274,6 +298,36 @@ class InstructorProfile(BaseProfile):
         unique=True,
         verbose_name="Credencial de Instrutor"
     )
+    
+    # Gênero para preferência do aluno
+    gender = models.CharField(
+        max_length=1,
+        choices=GENDER_CHOICES,
+        verbose_name="Gênero",
+        blank=True
+    )
+    gender_identity = models.CharField(
+        max_length=2,
+        choices=GENDER_IDENTITY_CHOICES,
+        verbose_name="Identidade de gênero",
+        blank=True,
+        help_text="Usado para exibir e preferências; mapeado para Homem/Mulher."
+    )
+    
+    # Localização do instrutor (para filtrar por proximidade)
+    cep_base = models.CharField(
+        max_length=9,
+        verbose_name="CEP da Base/Garagem",
+        blank=True,
+        help_text="CEP onde o instrutor inicia as aulas"
+    )
+
+    def set_gender_from_identity(self):
+        """Atualiza o campo binário `gender` com base na identidade."""
+        if self.gender_identity in ('CF', 'TW'):
+            self.gender = 'F'
+        elif self.gender_identity in ('CM', 'TM'):
+            self.gender = 'M'
     
     # Documentos de suporte opcionais
     support_document_1 = models.FileField(

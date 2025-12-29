@@ -241,6 +241,16 @@ class BaseRegistrationForm(UserCreationForm):
 
 class StudentRegistrationForm(BaseRegistrationForm):
     """Formulário específico para alunos"""
+    gender_identity = forms.ChoiceField(
+        required=True,
+        label='Identidade de Gênero',
+        choices=[
+            ('CF', 'Cisgênero Feminino'),
+            ('CM', 'Cisgênero Masculino'),
+            ('TM', 'Homem Transgênero'),
+            ('TW', 'Mulher Transgênero'),
+        ]
+    )
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -284,6 +294,7 @@ class StudentRegistrationForm(BaseRegistrationForm):
                 address=self.cleaned_data['address'],
                 address_number=self.cleaned_data['address_number'],
                 address_complement=self.cleaned_data.get('address_complement', ''),
+                gender_identity=self.cleaned_data['gender_identity'],
                 # Campos específicos do aluno
                 status='ativo',
                 progress=0,
@@ -298,6 +309,22 @@ class InstructorRegistrationForm(BaseRegistrationForm):
     """Formulário específico para instrutores"""
     
     # Campos específicos de instrutor
+    gender_identity = forms.ChoiceField(
+        required=True,
+        label='Identidade de Gênero',
+        choices=[
+            ('CF', 'Cisgênero Feminino'),
+            ('CM', 'Cisgênero Masculino'),
+            ('TM', 'Homem Transgênero'),
+            ('TW', 'Mulher Transgênero'),
+        ]
+    )
+    cep_base = forms.CharField(
+        max_length=9,
+        required=False,
+        label='CEP da Base/Garagem',
+        widget=forms.TextInput(attrs={'placeholder': '00000-000'})
+    )
     cnh = forms.CharField(
         max_length=30,
         required=True,
@@ -509,11 +536,17 @@ class InstructorRegistrationForm(BaseRegistrationForm):
                 credential=self.cleaned_data['credential'],
                 support_document_1=self.cleaned_data.get('support_document_1'),
                 support_document_2=self.cleaned_data.get('support_document_2'),
+                gender_identity=self.cleaned_data['gender_identity'],
+                cep_base=self.cleaned_data.get('cep_base', ''),
                 status='pendente',  # Aguarda aprovação
                 rating=0.0,
                 total_students=0,
                 total_lessons=0
             )
+
+            # Mapeia identidade para gênero binário usado nos filtros
+            profile.set_gender_from_identity()
+            profile.save(update_fields=['gender'])
 
             # Cria o veículo associado
             InstructorVehicle.objects.create(
@@ -760,11 +793,12 @@ class StudentEditForm(forms.ModelForm):
         fields = [
             'full_name', 'email', 'phone', 'birth_date',
             'cpf', 'rg', 'cep', 'address', 'address_number', 'address_complement',
-            'photo'
+            'photo', 'gender_identity'
         ]
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
             'photo': forms.FileInput(),
+            'gender_identity': forms.Select(),
         }
     
     def __init__(self, *args, **kwargs):
@@ -788,11 +822,12 @@ class InstructorEditForm(forms.ModelForm):
         fields = [
             'full_name', 'email', 'phone', 'birth_date',
             'cep', 'address', 'address_number', 'address_complement',
-            'photo'  # Apenas a foto pode ser alterada
+            'photo', 'gender_identity', 'cep_base'
         ]
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
             'photo': forms.FileInput(),
+            'gender_identity': forms.Select(),
         }
     
     def __init__(self, *args, **kwargs):
@@ -810,6 +845,14 @@ class InstructorEditForm(forms.ModelForm):
         self.fields['cep'].required = True
         self.fields['address'].required = True
         self.fields['address_number'].required = True
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Atualiza gênero binário conforme identidade
+        instance.set_gender_from_identity()
+        if commit:
+            instance.save()
+        return instance
         
         # Adiciona classes CSS
         for field_name, field in self.fields.items():
@@ -867,6 +910,19 @@ class InstructorPersonalEditForm(forms.Form):
             'accept': 'image/jpeg,image/jpg,image/png'
         })
     )
+    gender_identity = forms.ChoiceField(
+        required=False,
+        label='Identidade de Gênero',
+        choices=[
+            ('CF', 'Cisgênero Feminino'),
+            ('CM', 'Cisgênero Masculino'),
+            ('TM', 'Homem Transgênero'),
+            ('TW', 'Mulher Transgênero'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
     
     def __init__(self, *args, user=None, profile=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -877,6 +933,8 @@ class InstructorPersonalEditForm(forms.Form):
         if user:
             self.fields['username'].initial = user.username
             self.fields['email'].initial = user.email
+        if profile:
+            self.fields['gender_identity'].initial = getattr(profile, 'gender_identity', '')
     
     def clean_username(self):
         """Valida que o username é único"""
@@ -939,6 +997,14 @@ class InstructorPersonalEditForm(forms.Form):
             self.profile.photo = self.cleaned_data['photo']
             self.profile.save()
         
+        # Atualiza identidade de gênero, se fornecida
+        if self.cleaned_data.get('gender_identity') and self.profile:
+            self.profile.gender_identity = self.cleaned_data['gender_identity']
+            # Mapeia binário
+            if hasattr(self.profile, 'set_gender_from_identity'):
+                self.profile.set_gender_from_identity()
+            self.profile.save(update_fields=['gender_identity', 'gender'])
+        
         return self.user
 
 
@@ -991,6 +1057,19 @@ class StudentPersonalEditForm(forms.Form):
             'accept': 'image/jpeg,image/jpg,image/png'
         })
     )
+    gender_identity = forms.ChoiceField(
+        required=False,
+        label='Identidade de Gênero',
+        choices=[
+            ('CF', 'Cisgênero Feminino'),
+            ('CM', 'Cisgênero Masculino'),
+            ('TM', 'Homem Transgênero'),
+            ('TW', 'Mulher Transgênero'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
     
     def __init__(self, *args, user=None, profile=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1001,6 +1080,8 @@ class StudentPersonalEditForm(forms.Form):
         if user:
             self.fields['username'].initial = user.username
             self.fields['email'].initial = user.email
+        if profile:
+            self.fields['gender_identity'].initial = getattr(profile, 'gender_identity', '')
     
     def clean_username(self):
         """Valida que o username é único"""
@@ -1059,6 +1140,11 @@ class StudentPersonalEditForm(forms.Form):
             
             self.profile.photo = self.cleaned_data['photo']
             self.profile.save()
+        
+        # Atualiza identidade de gênero, se fornecida
+        if self.cleaned_data.get('gender_identity') and self.profile:
+            self.profile.gender_identity = self.cleaned_data['gender_identity']
+            self.profile.save(update_fields=['gender_identity'])
         
         return self.user
 
