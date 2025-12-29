@@ -1,6 +1,7 @@
 from django import forms
 from .models import Lesson
 from accounts.models import InstructorVehicle
+from django.core.exceptions import ValidationError
 
 
 class LessonForm(forms.ModelForm):
@@ -44,3 +45,16 @@ class LessonForm(forms.ModelForm):
         self.fields['bairro'].required = False
         self.fields['cidade'].required = False
         self.fields['estado'].required = False
+
+    def clean(self):
+        """Normaliza CEP e mantém validações básicas."""
+        cleaned_data = super().clean()
+        cep = cleaned_data.get('cep', '') or ''
+
+        cep_digits = ''.join(filter(str.isdigit, cep))
+        if cep_digits:
+            if len(cep_digits) != 8:
+                raise ValidationError({'cep': 'Informe um CEP válido com 8 dígitos.'})
+            cleaned_data['cep'] = f"{cep_digits[:5]}-{cep_digits[5:]}"
+
+        return cleaned_data

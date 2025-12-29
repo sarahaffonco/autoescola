@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Q, Avg
+from django.db.models import Count, Q, Avg, Value
+from django.db.models.functions import Replace, Coalesce
 from django.http import JsonResponse
 from datetime import date, timedelta
 from lessons.models import Lesson
@@ -202,38 +203,47 @@ def lookup_cep(request):
 
 
 def filter_instructors(request):
-    """API endpoint para filtrar instrutores por CEP e gênero"""
-    from accounts.models import InstructorProfile, User
-    
-    cep = request.GET.get('cep', '').strip()
+    """API endpoint para filtrar instrutores por bairro/logradouro (ou CEP opcional) e gênero"""
+    from accounts.models import User
+
+    bairro = request.GET.get('bairro', '').strip()
+    rua = request.GET.get('rua', '').strip()
     gender = request.GET.get('gender', '')
-    
-    if not cep or len(cep.replace('-', '')) != 8:
-        return JsonResponse({'error': 'CEP inválido'}, status=400)
-    
-    # Remove formatação do CEP
-    cep_clean = cep.replace('-', '')
-    
+    cep = request.GET.get('cep', '').strip()
+
+    cep_digits = ''.join(filter(str.isdigit, cep))
+    cep_prefix = cep_digits[:5] if len(cep_digits) >= 5 else ''
+
+    if not bairro and not rua and not cep_prefix:
+        return JsonResponse({'error': 'Informe bairro, logradouro ou CEP.'}, status=400)
+
     # Filtra instrutores ativos
     instructors_base = User.objects.filter(
         role='instrutor',
         is_active=True,
-    ).exclude(instructorprofile_profile__status__in=['inativo', 'suspenso'])
-    instructors_base = instructors_base.select_related('instructorprofile_profile')
-    
+    ).exclude(
+        instructorprofile_profile__status__in=['inativo', 'suspenso']
+    ).select_related('instructorprofile_profile')
+
     # Filtra por gênero se fornecido
     if gender in ['M', 'F']:
         instructors_base = instructors_base.filter(instructorprofile_profile__gender=gender)
-    
-    # Filtra por proximidade de CEP (simples: mesmo 5 primeiros dígitos ou CEP exato)
-    # Uma implementação mais robusta usaria GeoDjango
-    if cep_clean:
-        cep_prefix = cep_clean[:5]
-        nearby = instructors_base.filter(instructorprofile_profile__cep_base__startswith=cep_prefix)
-        no_cep = instructors_base.filter(instructorprofile_profile__cep_base='')
-        instructors = (nearby | no_cep).distinct()
-    else:
-        instructors = instructors_base
+
+    # Combina filtros de endereço/CEP com OR para não excluir matches válidos
+    address_filters = Q()
+    if bairro:
+        address_filters |= Q(instructorprofile_profile__address__icontains=bairro)
+        address_filters |= Q(instructorprofile_profile__address_complement__icontains=bairro)
+    if rua:
+        address_filters |= Q(instructorprofile_profile__address__icontains=rua)
+    if cep_prefix:
+        address_filters |= Q(instructorprofile_profile__cep_base__startswith=cep_prefix)
+        address_filters |= Q(instructorprofile_profile__cep__startswith=cep_prefix)
+
+    if address_filters:
+        instructors_base = instructors_base.filter(address_filters)
+
+    instructors = instructors_base
     
     # Serializa resultados
     result = []
