@@ -38,6 +38,18 @@ class Lesson(models.Model):
     score = models.CharField(max_length=50, blank=True, help_text="Avaliação da aula")
     notes = models.TextField(blank=True)
     lesson_number = models.IntegerField(default=1)
+    # Preferências do aluno
+    prefer_adapted_pcd = models.BooleanField(default=False, verbose_name='Preferência: Adaptado PCD')
+    prefer_dual_control = models.BooleanField(default=False, verbose_name='Preferência: Acionamento Duplo')
+    # Veículo escolhido (opcional)
+    vehicle = models.ForeignKey(
+        'accounts.InstructorVehicle',
+        on_delete=models.SET_NULL,
+        related_name='lessons',
+        null=True,
+        blank=True,
+        verbose_name='Veículo'
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

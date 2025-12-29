@@ -204,10 +204,6 @@
 
     <!-- JavaScript for dropdown e modal -->
     <script>
-    console.log("=== PAGE LOAD ===");
-    console.log("navbar photo initial:", "{{ profile_photo_url|default_if_none:'' }}");
-    console.log("user role:", "{{ user.role }}");
-    console.log("user id:", "{{ user.id }}");
     
     document.addEventListener('DOMContentLoaded', function () {
         // --- 1. Menu Dropdown da Navbar ---
@@ -244,7 +240,6 @@
 
     // --- 3. Carregar Formulário via AJAX (GET) ---
     function loadEditForm() {
-        console.log('=== LOAD EDIT FORM ===');
         const modalContent = document.getElementById('modalContent');
         if (!modalContent) return;
 
@@ -264,7 +259,6 @@
             return response.text();
         })
         .then(html => {
-            console.log('Form loaded, length:', html.length);
             modalContent.innerHTML = html;
             initializeMasks(); // Aplica máscaras no form carregado
             initializeFormValidation(); // Ativa o envio via AJAX
@@ -289,14 +283,11 @@
         if (editForm) {
             editForm.addEventListener('submit', function (e) {
                 e.preventDefault();
-                console.log('=== SUBMIT FORM ===');
                 const formData = new FormData(this);
                 const pendingPhoto = formData.get('photo');
                 const localPreview = pendingPhoto && pendingPhoto.size ? URL.createObjectURL(pendingPhoto) : null;
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
-                console.log('pendingPhoto:', pendingPhoto?.name, 'size:', pendingPhoto?.size);
-                console.log('localPreview:', localPreview);
 
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Salvando...';
@@ -312,14 +303,9 @@
                 
                 .then(response => response.json())
                 .then(data => {
-                    console.log('=== SAVE RESPONSE ===');
-                    console.log('success:', data.success);
-                    console.log('message:', data.message);
-                    console.log('photo_url:', data.photo_url);
                     if (data.success) {
                         showNotification('success', data.message);
                         const finalUrl = data.photo_url || localPreview;
-                        console.log('finalUrl to set:', finalUrl);
                         if (finalUrl) {
                             // Atualiza avatar e fecha a modal
                             updateNavbarAvatar(finalUrl);
@@ -342,18 +328,14 @@
 
     // Atualiza avatar assim que o arquivo é escolhido (antes de salvar)
     function attachPhotoPreview() {
-        console.log('=== ATTACH PHOTO PREVIEW ===');
         const input = document.querySelector('#editProfileForm input[name="photo"]');
         if (!input) {
-            console.log('Photo input not found');
             return;
         }
         input.addEventListener('change', (e) => {
             const file = e.target.files && e.target.files[0];
-            console.log('Photo selected:', file?.name, 'size:', file?.size);
             if (file) {
                 const previewUrl = URL.createObjectURL(file);
-                console.log('Preview URL (blob):', previewUrl);
                 updateNavbarAvatar(previewUrl);
             }
         });
@@ -369,8 +351,6 @@
     }
 
     function updateNavbarAvatar(url) {
-        console.log('=== UPDATE NAVBAR AVATAR ===');
-        console.log('Input URL:', url);
         const userMenuBtn = document.getElementById('userMenuBtn');
         if (!userMenuBtn) {
             console.error('userMenuBtn not found');
@@ -381,15 +361,12 @@
         if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
             const bust = `v=${Date.now()}`;
             finalUrl = url.includes('?') ? `${url}&${bust}` : `${url}?${bust}`;
-            console.log('Added cache-bust, finalUrl:', finalUrl);
         }
         const img = userMenuBtn.querySelector('img');
         if (img) {
-            console.log('Updating existing img tag');
             img.onerror = () => avatarErrorFallback(img);
             img.src = finalUrl;
         } else {
-            console.log('Creating new img tag');
             userMenuBtn.innerHTML = `<img src="${finalUrl}" alt="Foto do usuário" class="w-8 h-8 rounded-full object-cover border border-gray-300" onerror="avatarErrorFallback(this)" />`;
         }
     }
