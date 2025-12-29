@@ -34,6 +34,41 @@
             </div>
         </div>
 
+        <!-- Vehicle Card -->
+        <div class="mb-8">
+            <div class="bg-white rounded-2xl p-6 shadow-card flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100">
+                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 13l2-2m0 0l7-7 7 7M5 11v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Veículo do Instrutor</h3>
+                        {% if profile and profile.vehicle %}
+                        <p class="text-gray-600 mt-1">
+                            <span class="font-medium">Placa:</span> {{ profile.vehicle.plate }} ·
+                            <span class="font-medium">Modelo:</span> {{ profile.vehicle.make }} {{ profile.vehicle.model }} ·
+                            <span class="font-medium">Ano:</span> {{ profile.vehicle.year }} ·
+                            <span class="font-medium">Cor:</span> {{ profile.vehicle.color }}
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Acionamento duplo: {{ profile.vehicle.dual_control|yesno:"Sim,Não" }} · Adaptado PCD: {{ profile.vehicle.adapted_pcd|yesno:"Sim,Não" }}
+                        </p>
+                        {% else %}
+                        <p class="text-gray-600 mt-1">Nenhum veículo cadastrado ainda.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <a href="{% url 'instructor_vehicle' %}"
+                       class="inline-flex items-center px-5 py-3 rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-medium hover:opacity-90 transition-all shadow-card">
+                        Gerenciar Veículo
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div class="bg-white rounded-2xl p-6 shadow-card">

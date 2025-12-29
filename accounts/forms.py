@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from datetime import date, timedelta
 import re
-from .models import User, StudentProfile, InstructorProfile, EmployeeProfile
+from .models import User, StudentProfile, InstructorProfile, EmployeeProfile, InstructorVehicle
 
 
 class BaseRegistrationForm(UserCreationForm):
@@ -336,6 +336,51 @@ class InstructorRegistrationForm(BaseRegistrationForm):
         label='Documento de Suporte 2',
         help_text='Certificado de curso, etc. (opcional)'
     )
+
+    # Veículo do instrutor
+    vehicle_plate = forms.CharField(
+        max_length=10,
+        required=True,
+        label='Placa do Veículo',
+        widget=forms.TextInput(attrs={'placeholder': 'ABC1D23 ou AAA-1234'})
+    )
+    vehicle_renavam = forms.CharField(
+        max_length=11,
+        required=True,
+        label='RENAVAM',
+        widget=forms.TextInput(attrs={'placeholder': '11 dígitos'})
+    )
+    vehicle_model = forms.CharField(
+        max_length=100,
+        required=True,
+        label='Modelo',
+        widget=forms.TextInput(attrs={'placeholder': 'Ex.: Onix 1.0'})
+    )
+    vehicle_make = forms.CharField(
+        max_length=100,
+        required=True,
+        label='Marca',
+        widget=forms.TextInput(attrs={'placeholder': 'Ex.: Chevrolet'})
+    )
+    vehicle_color = forms.CharField(
+        max_length=50,
+        required=True,
+        label='Cor',
+        widget=forms.TextInput(attrs={'placeholder': 'Ex.: Prata'})
+    )
+    vehicle_year = forms.IntegerField(
+        required=True,
+        label='Ano',
+        widget=forms.NumberInput(attrs={'placeholder': 'Ex.: 2022', 'min': 1960})
+    )
+    vehicle_dual_control = forms.BooleanField(
+        required=False,
+        label='Possui acionamento duplo (pedais no passageiro)'
+    )
+    vehicle_adapted_pcd = forms.BooleanField(
+        required=False,
+        label='Veículo adaptado para PCD'
+    )
     
     def clean_cnh(self):
         """Valida o número da CNH"""
@@ -386,6 +431,32 @@ class InstructorRegistrationForm(BaseRegistrationForm):
                 raise ValidationError(f'O documento da CNH deve ter no máximo {max_size // (1024*1024)}MB')
         
         return cnh_doc
+
+    # ==========================
+    # Validações do veículo
+    # ==========================
+    def clean_vehicle_plate(self):
+        plate = (self.cleaned_data.get('vehicle_plate') or '').strip().upper()
+        import re
+        pattern_old = re.compile(r'^[A-Z]{3}-?\d{4}$')
+        pattern_mercosul = re.compile(r'^[A-Z]{3}-?[0-9][A-Z][0-9]{2}$')
+        if not (pattern_old.match(plate) or pattern_mercosul.match(plate)):
+            raise ValidationError('Placa inválida. Use AAA-1234 ou ABC1D23.')
+        return plate.replace('-', '')
+
+    def clean_vehicle_renavam(self):
+        ren = ''.join(filter(str.isdigit, self.cleaned_data.get('vehicle_renavam') or ''))
+        if len(ren) != 11:
+            raise ValidationError('RENAVAM deve conter exatamente 11 dígitos.')
+        return ren
+
+    def clean_vehicle_year(self):
+        from datetime import date
+        year = self.cleaned_data.get('vehicle_year')
+        current_year = date.today().year
+        if not year or year < 1960 or year > current_year + 1:
+            raise ValidationError(f"Ano deve estar entre 1960 e {current_year + 1}.")
+        return year
     
     def clean_support_document_1(self):
         """Valida documento de suporte 1"""
@@ -418,7 +489,7 @@ class InstructorRegistrationForm(BaseRegistrationForm):
             user.save()
             
             # Cria o perfil do instrutor
-            InstructorProfile.objects.create(
+            profile = InstructorProfile.objects.create(
                 user=user,
                 full_name=self.cleaned_data['full_name'],
                 email=self.cleaned_data['email'],
@@ -442,6 +513,19 @@ class InstructorRegistrationForm(BaseRegistrationForm):
                 rating=0.0,
                 total_students=0,
                 total_lessons=0
+            )
+
+            # Cria o veículo associado
+            InstructorVehicle.objects.create(
+                instructor=profile,
+                plate=self.cleaned_data['vehicle_plate'],
+                renavam=self.cleaned_data['vehicle_renavam'],
+                model=self.cleaned_data['vehicle_model'],
+                make=self.cleaned_data['vehicle_make'],
+                color=self.cleaned_data['vehicle_color'],
+                year=self.cleaned_data['vehicle_year'],
+                dual_control=self.cleaned_data.get('vehicle_dual_control', False),
+                adapted_pcd=self.cleaned_data.get('vehicle_adapted_pcd', False),
             )
         
         return user
@@ -1006,3 +1090,55 @@ class EmployeeEditForm(forms.ModelForm):
             if field.widget:
                 if 'class' not in field.widget.attrs:
                     field.widget.attrs['class'] = 'form-control'
+
+
+class InstructorVehicleForm(forms.ModelForm):
+    """Formulário para edição dos dados do veículo do instrutor"""
+
+    class Meta:
+        model = InstructorVehicle
+        fields = [
+            'plate', 'renavam', 'make', 'model', 'color', 'year',
+            'dual_control', 'adapted_pcd'
+        ]
+        labels = {
+            'plate': 'Placa',
+            'renavam': 'RENAVAM',
+            'make': 'Marca',
+            'model': 'Modelo',
+            'color': 'Cor',
+            'year': 'Ano',
+            'dual_control': 'Possui acionamento duplo (pedais no passageiro)',
+            'adapted_pcd': 'Veículo adaptado para PCD',
+        }
+        widgets = {
+            'plate': forms.TextInput(attrs={'placeholder': 'ABC1D23 ou AAA-1234'}),
+            'renavam': forms.TextInput(attrs={'placeholder': '11 dígitos'}),
+            'make': forms.TextInput(attrs={'placeholder': 'Ex.: Chevrolet'}),
+            'model': forms.TextInput(attrs={'placeholder': 'Ex.: Onix 1.0'}),
+            'color': forms.TextInput(attrs={'placeholder': 'Ex.: Prata'}),
+            'year': forms.NumberInput(attrs={'min': 1960, 'placeholder': 'Ex.: 2022'}),
+        }
+
+    def clean_plate(self):
+        plate = (self.cleaned_data.get('plate') or '').strip().upper()
+        import re
+        pattern_old = re.compile(r'^[A-Z]{3}-?\d{4}$')
+        pattern_mercosul = re.compile(r'^[A-Z]{3}-?[0-9][A-Z][0-9]{2}$')
+        if not (pattern_old.match(plate) or pattern_mercosul.match(plate)):
+            raise ValidationError('Placa inválida. Use AAA-1234 ou ABC1D23.')
+        return plate.replace('-', '')
+
+    def clean_renavam(self):
+        ren = ''.join(filter(str.isdigit, self.cleaned_data.get('renavam') or ''))
+        if len(ren) != 11:
+            raise ValidationError('RENAVAM deve conter exatamente 11 dígitos.')
+        return ren
+
+    def clean_year(self):
+        from datetime import date
+        year = self.cleaned_data.get('year')
+        current_year = date.today().year
+        if not year or year < 1960 or year > current_year + 1:
+            raise ValidationError(f"Ano deve estar entre 1960 e {current_year + 1}.")
+        return year
