@@ -267,3 +267,6 @@ def filter_vehicles(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+
+
