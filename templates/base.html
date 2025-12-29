@@ -111,11 +111,15 @@
 
                 <div class="relative">
                     <button id="userMenuBtn"
-                        class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all"
+                        data-initial="{{ user.full_name|default:user.username|slice:':1'|upper }}">
+                        {% if profile_photo_url %}
+                            <img src="{{ profile_photo_url }}" alt="Foto do usuário" class="w-8 h-8 rounded-full object-cover border border-gray-300" onerror="avatarErrorFallback(this)" />
+                        {% else %}
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                                <span class="text-sm font-medium text-gray-700">{{ user.full_name|default:user.username|slice:":1"|upper }}</span>
+                            </div>
+                        {% endif %}
                     </button>
                     <div id="userMenu"
                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200">
@@ -200,6 +204,11 @@
 
     <!-- JavaScript for dropdown e modal -->
     <script>
+    console.log("=== PAGE LOAD ===");
+    console.log("navbar photo initial:", "{{ profile_photo_url|default_if_none:'' }}");
+    console.log("user role:", "{{ user.role }}");
+    console.log("user id:", "{{ user.id }}");
+    
     document.addEventListener('DOMContentLoaded', function () {
         // --- 1. Menu Dropdown da Navbar ---
         const userMenuBtn = document.getElementById('userMenuBtn');
@@ -229,17 +238,13 @@
             });
         }
 
-        const closeAllModals = () => {
-            if (editProfileModal) editProfileModal.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        };
-
-        if (closeModalBtn) closeModalBtn.addEventListener('click', closeAllModals);
-        if (modalOverlay) modalOverlay.addEventListener('click', closeAllModals);
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeEditModal);
+        if (modalOverlay) modalOverlay.addEventListener('click', closeEditModal);
     });
 
     // --- 3. Carregar Formulário via AJAX (GET) ---
     function loadEditForm() {
+        console.log('=== LOAD EDIT FORM ===');
         const modalContent = document.getElementById('modalContent');
         if (!modalContent) return;
 
@@ -259,14 +264,23 @@
             return response.text();
         })
         .then(html => {
+            console.log('Form loaded, length:', html.length);
             modalContent.innerHTML = html;
             initializeMasks(); // Aplica máscaras no form carregado
             initializeFormValidation(); // Ativa o envio via AJAX
+            attachPhotoPreview(); // Atualiza avatar ao escolher nova foto
         })
         .catch(error => {
             console.error('Erro:', error);
             modalContent.innerHTML = '<p class="text-red-500 text-center py-8">Erro ao carregar o formulário.</p>';
         });
+    }
+
+    // Função global para fechar a modal de edição
+    function closeEditModal() {
+        const editProfileModal = document.getElementById('editProfileModal');
+        if (editProfileModal) editProfileModal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     // --- 4. Enviar Formulário via AJAX (POST) ---
@@ -275,9 +289,14 @@
         if (editForm) {
             editForm.addEventListener('submit', function (e) {
                 e.preventDefault();
+                console.log('=== SUBMIT FORM ===');
                 const formData = new FormData(this);
+                const pendingPhoto = formData.get('photo');
+                const localPreview = pendingPhoto && pendingPhoto.size ? URL.createObjectURL(pendingPhoto) : null;
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
+                console.log('pendingPhoto:', pendingPhoto?.name, 'size:', pendingPhoto?.size);
+                console.log('localPreview:', localPreview);
 
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Salvando...';
@@ -290,21 +309,88 @@
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
                 })
+                
                 .then(response => response.json())
                 .then(data => {
+                    console.log('=== SAVE RESPONSE ===');
+                    console.log('success:', data.success);
+                    console.log('message:', data.message);
+                    console.log('photo_url:', data.photo_url);
                     if (data.success) {
                         showNotification('success', data.message);
-                        setTimeout(() => window.location.reload(), 1500);
+                        const finalUrl = data.photo_url || localPreview;
+                        console.log('finalUrl to set:', finalUrl);
+                        if (finalUrl) {
+                            // Atualiza avatar e fecha a modal
+                            updateNavbarAvatar(finalUrl);
+                        }
+                        // Fecha a modal após salvar com sucesso
+                        closeEditModal();
                     } else {
                         showNotification('error', data.message || 'Erro ao salvar');
                     }
                 })
+                
                 .catch(() => showNotification('error', 'Erro de conexão.'))
                 .finally(() => {
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 });
             });
+        }
+    }
+
+    // Atualiza avatar assim que o arquivo é escolhido (antes de salvar)
+    function attachPhotoPreview() {
+        console.log('=== ATTACH PHOTO PREVIEW ===');
+        const input = document.querySelector('#editProfileForm input[name="photo"]');
+        if (!input) {
+            console.log('Photo input not found');
+            return;
+        }
+        input.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            console.log('Photo selected:', file?.name, 'size:', file?.size);
+            if (file) {
+                const previewUrl = URL.createObjectURL(file);
+                console.log('Preview URL (blob):', previewUrl);
+                updateNavbarAvatar(previewUrl);
+            }
+        });
+    }
+    
+    function avatarErrorFallback(imgEl) {
+        console.warn('=== AVATAR ERROR FALLBACK ===');
+        console.warn('Failed image src:', imgEl?.src);
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        if (!userMenuBtn) return;
+        const initial = userMenuBtn.getAttribute('data-initial') || '?';
+        userMenuBtn.innerHTML = `<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300"><span class="text-sm font-medium text-gray-700">${initial}</span></div>`;
+    }
+
+    function updateNavbarAvatar(url) {
+        console.log('=== UPDATE NAVBAR AVATAR ===');
+        console.log('Input URL:', url);
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        if (!userMenuBtn) {
+            console.error('userMenuBtn not found');
+            return;
+        }
+        // Evita cache do navegador ao trocar a foto; não aplique bust em blob:/data:
+        let finalUrl = url;
+        if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
+            const bust = `v=${Date.now()}`;
+            finalUrl = url.includes('?') ? `${url}&${bust}` : `${url}?${bust}`;
+            console.log('Added cache-bust, finalUrl:', finalUrl);
+        }
+        const img = userMenuBtn.querySelector('img');
+        if (img) {
+            console.log('Updating existing img tag');
+            img.onerror = () => avatarErrorFallback(img);
+            img.src = finalUrl;
+        } else {
+            console.log('Creating new img tag');
+            userMenuBtn.innerHTML = `<img src="${finalUrl}" alt="Foto do usuário" class="w-8 h-8 rounded-full object-cover border border-gray-300" onerror="avatarErrorFallback(this)" />`;
         }
     }
 
@@ -322,12 +408,8 @@
         notification.innerHTML = `<span>${message}</span>`;
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 4000);
-    
     }
-
-
-    console.log("URL test:", "{% url 'edit_profile' %}");
-</script>
+    </script>
 
 
     {% block extra_js %}{% endblock %}
