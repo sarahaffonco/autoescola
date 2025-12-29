@@ -98,6 +98,7 @@ def agendamento(request):
     """Lesson scheduling view"""
     from lessons.forms import LessonForm
     from datetime import date
+    from accounts.models import InstructorVehicle
     
     if request.method == 'POST':
         form = LessonForm(request.POST)
@@ -112,10 +113,13 @@ def agendamento(request):
     # Get available instructors
     from accounts.models import User
     instructors = User.objects.filter(role='instrutor', is_active=True)
+    # Lista de veículos disponíveis (de instrutores ativos)
+    vehicles = InstructorVehicle.objects.select_related('instructor').filter(instructor__user__is_active=True)
     
     context = {
         'form': form,
         'instructors': instructors,
+        'vehicles': vehicles,
         'time_slots': ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'],
         'locations': [
             'Centro - Av. Principal, 123',

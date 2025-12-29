@@ -419,7 +419,6 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Inicializando máscaras e validações para funcionário...');
     
     // ============================================
     // 1. MÁSCARA PARA CPF
@@ -555,7 +554,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.classList.remove('border-gray-300');
                         this.classList.add('border-green-500');
                         
-                        console.log('CEP encontrado:', formattedAddress);
                     } else {
                         throw new Error('CEP não encontrado');
                     }
@@ -740,7 +738,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    console.log('Máscaras e validações para funcionário inicializadas com sucesso!');
 });
 </script>
 {% endblock %}
