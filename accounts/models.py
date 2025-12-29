@@ -359,6 +359,70 @@ class InstructorProfile(BaseProfile):
         return self.status == 'ativo'
 
 
+class InstructorVehicle(models.Model):
+    """Informações do veículo associado ao instrutor"""
+    instructor = models.OneToOneField(
+        InstructorProfile,
+        on_delete=models.CASCADE,
+        related_name='vehicle',
+        verbose_name="Instrutor"
+    )
+
+    plate = models.CharField(max_length=10, verbose_name="Placa")
+    renavam = models.CharField(max_length=11, verbose_name="RENAVAM")
+    model = models.CharField(max_length=100, verbose_name="Modelo")
+    make = models.CharField(max_length=100, verbose_name="Marca")
+    color = models.CharField(max_length=50, verbose_name="Cor")
+    year = models.PositiveIntegerField(verbose_name="Ano")
+    dual_control = models.BooleanField(default=False, verbose_name="Acionamento Duplo")
+    adapted_pcd = models.BooleanField(default=False, verbose_name="Adaptado para PCD")
+
+    class Meta:
+        verbose_name = "Veículo do Instrutor"
+        verbose_name_plural = "Veículos dos Instrutores"
+
+    def __str__(self):
+        return f"{self.plate} - {self.make} {self.model} ({self.year})"
+
+    def clean(self):
+        from datetime import date
+        errors = {}
+
+        # Validação de placa (formatos antigos e Mercosul). Permite hífen opcional e normaliza p/ maiúsculas.
+        plate_raw = (self.plate or '').strip().upper()
+        import re
+        # Aceita AAA-1234, AAA1A23 e variações sem hífen
+        pattern_old = re.compile(r'^[A-Z]{3}-?\d{4}$')
+        pattern_mercosul = re.compile(r'^[A-Z]{3}-?[0-9][A-Z][0-9]{2}$')
+        if not (pattern_old.match(plate_raw) or pattern_mercosul.match(plate_raw)):
+            errors['plate'] = 'Placa inválida. Use formatos AAA-1234 ou ABC1D23.'
+        else:
+            self.plate = plate_raw.replace('-', '')  # Persistir sem hífen
+
+        # RENAVAM: 11 dígitos numéricos
+        ren = ''.join(filter(str.isdigit, self.renavam or ''))
+        if len(ren) != 11:
+            errors['renavam'] = 'RENAVAM deve conter exatamente 11 dígitos.'
+        else:
+            self.renavam = ren
+
+        # Ano: razoável entre 1960 e ano atual + 1
+        current_year = date.today().year
+        if not self.year or self.year < 1960 or self.year > current_year + 1:
+            errors['year'] = f"Ano deve estar entre 1960 e {current_year + 1}."
+
+        # Campos de texto básicos
+        if not (self.model or '').strip():
+            errors['model'] = 'Informe o modelo do veículo.'
+        if not (self.make or '').strip():
+            errors['make'] = 'Informe a marca do veículo.'
+        if not (self.color or '').strip():
+            errors['color'] = 'Informe a cor do veículo.'
+
+        if errors:
+            raise ValidationError(errors)
+
+
 class EmployeeProfile(BaseProfile):
     """Perfil específico para funcionários"""
     DEPARTMENT_CHOICES = (

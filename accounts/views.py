@@ -16,8 +16,9 @@ from .forms import (
     InstructorPersonalEditForm,
     StudentPersonalEditForm,
     EmployeeEditForm,
+    InstructorVehicleForm,
 )
-from .models import User, StudentProfile, InstructorProfile, EmployeeProfile
+from .models import User, StudentProfile, InstructorProfile, EmployeeProfile, InstructorVehicle
 
 
 def login_view(request):
@@ -197,7 +198,7 @@ def instrutor_dashboard(request):
         'title': 'Dashboard do Instrutor'
     }
     
-    return render(request, 'core/instrutor_dashboard.html', context)
+    return render(request, 'core/instrutor.html', context)
 
 
 @login_required
@@ -217,6 +218,45 @@ def funcionario_dashboard(request):
     }
     
     return render(request, 'core/funcionario_dashboard.html', context)
+
+
+@login_required
+def instructor_vehicle_view(request):
+    """Página para visualizar/editar o veículo do instrutor"""
+    if not request.user.is_instrutor():
+        messages.error(request, 'Acesso não autorizado')
+        return redirect('login')
+
+    profile = request.user.get_profile()
+    if not profile or not isinstance(profile, InstructorProfile):
+        messages.error(request, 'Perfil de instrutor não encontrado.')
+        return redirect('instrutor_dashboard')
+
+    vehicle = getattr(profile, 'vehicle', None)
+    if not vehicle:
+        vehicle = InstructorVehicle(instructor=profile)
+
+    if request.method == 'POST':
+        form = InstructorVehicleForm(request.POST, instance=vehicle)
+        if form.is_valid():
+            entity = form.save(commit=False)
+            entity.instructor = profile
+            entity.save()
+            messages.success(request, 'Dados do veículo atualizados com sucesso!')
+            return redirect('instructor_vehicle')
+        else:
+            messages.error(request, 'Por favor, corrija os erros abaixo.')
+    else:
+        form = InstructorVehicleForm(instance=vehicle)
+
+    context = {
+        'user': request.user,
+        'profile': profile,
+        'form': form,
+        'title': 'Veículo do Instrutor'
+    }
+
+    return render(request, 'accounts/edit_vehicle.html', context)
 
 
 # ============================================
