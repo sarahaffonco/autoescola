@@ -41,6 +41,8 @@ def instrutor_dashboard(request):
     ).select_related('student')[:4]
     
     context = {
+        'user': request.user,
+        'profile': request.user.get_profile(),
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
     }
@@ -78,6 +80,8 @@ def aluno_dashboard(request):
     }
     
     context = {
+        'user': request.user,
+        'profile': request.user.get_profile(),
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
         'completed_lessons': completed_lessons,
@@ -119,6 +123,7 @@ def agendamento(request):
             'Zona Norte - Av. Brasil, 789',
         ],
         'today': date.today(),
+        'profile': request.user.get_profile(),
     }
     
     return render(request, 'core/agendamento.html', context)

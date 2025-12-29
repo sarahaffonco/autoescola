@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse 
 from django.template.loader import render_to_string 
+from django.utils import timezone
 
 from .forms import (
     UserLoginForm, 
@@ -13,12 +14,10 @@ from .forms import (
     StudentEditForm, 
     InstructorEditForm, 
     InstructorPersonalEditForm,
+    StudentPersonalEditForm,
     EmployeeEditForm,
-    StudentProfile,         
-    InstructorProfile,      
-    EmployeeProfile            
 )
-from .models import User
+from .models import User, StudentProfile, InstructorProfile, EmployeeProfile
 
 
 def login_view(request):
@@ -259,22 +258,68 @@ def edit_profile_view(request):
 
     # 1. Identificação do Perfil
     if role == 'aluno':
-        if hasattr(user, 'studentprofile'):
-            form_class = StudentEditForm
-            instance = user.studentprofile
-            template = 'accounts/edit_student.html'
-        else:
-            # Cria um perfil vazio se não existir
-            instance = StudentProfile(user=user)
-            form_class = StudentEditForm
-            template = 'accounts/edit_student.html'
+        # Para alunos, garante que buscamos o perfil real (OneToOne usa related_name diferente)
+        profile = user.get_profile()
+        if profile and not isinstance(profile, StudentProfile):
+            profile = StudentProfile.objects.filter(user=user).first()
+        
+        # 2. Tratamento do GET (Carregar Formulário)
+        if request.method == 'GET':
+            form = StudentPersonalEditForm(user=user, profile=profile)
+            html = render_to_string('accounts/edit_student_personal.html', {
+                'form': form, 
+                'user': user,
+                'profile': profile
+            }, request=request)
+            return HttpResponse(html)
+        
+        # 3. Tratamento do POST (Salvar Dados)
+        elif request.method == 'POST':
+            form = StudentPersonalEditForm(request.POST, request.FILES, user=user, profile=profile)
+            
+            try:
+                if form.is_valid():
+                    form.save()
+
+                    # Garante a URL absoluta mais recente da foto para atualizar o avatar do usuário
+                    profile = user.get_profile()
+                    print(f"[StudentProfile POST] Profile after save: {profile}")
+                    print(f"[StudentProfile POST] Profile.photo: {profile.photo if profile else 'None'}")
+                    print(f"[StudentProfile POST] Profile.photo.name: {profile.photo.name if profile and profile.photo else 'None'}")
+                    photo_url = None
+                    if profile and getattr(profile, 'photo', None):
+                        profile.refresh_from_db()
+                        print(f"[StudentProfile POST] After refresh: {profile.photo.name}")
+                        version = int(timezone.now().timestamp())
+                        photo_url = f"{request.build_absolute_uri(profile.photo.url)}?v={version}"
+                        print(f"[StudentProfile POST] Photo URL: {photo_url}")
+
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Dados atualizados com sucesso!',
+                        'photo_url': photo_url
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Por favor, corrija os erros abaixo.',
+                        'errors': form.errors
+                    })
+                    
+            except Exception as e:
+                print(f"Erro ao salvar perfil: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Erro ao salvar: {str(e)}'
+                }, status=500)
+            
+            
             
     elif role == 'instrutor':
         # Para instrutores, usa o formulário simplificado de dados pessoais
-        if hasattr(user, 'instructorprofile'):
-            profile = user.instructorprofile
-        else:
-            profile = None
+        profile = user.get_profile()
+        if profile and not isinstance(profile, InstructorProfile):
+            profile = InstructorProfile.objects.filter(user=user).first()
         
         # 2. Tratamento do GET (Carregar Formulário)
         if request.method == 'GET':
@@ -293,10 +338,24 @@ def edit_profile_view(request):
             try:
                 if form.is_valid():
                     form.save()
-                    
+
+                    # Garante a URL absoluta mais recente da foto para atualizar o avatar do usuário
+                    profile = user.get_profile()
+                    print(f"[InstructorProfile POST] Profile after save: {profile}")
+                    print(f"[InstructorProfile POST] Profile.photo: {profile.photo if profile else 'None'}")
+                    print(f"[InstructorProfile POST] Profile.photo.name: {profile.photo.name if profile and profile.photo else 'None'}")
+                    photo_url = None
+                    if profile and getattr(profile, 'photo', None):
+                        profile.refresh_from_db()
+                        print(f"[InstructorProfile POST] After refresh: {profile.photo.name}")
+                        version = int(timezone.now().timestamp())
+                        photo_url = f"{request.build_absolute_uri(profile.photo.url)}?v={version}"
+                        print(f"[InstructorProfile POST] Photo URL: {photo_url}")
+
                     return JsonResponse({
                         'success': True,
-                        'message': 'Dados atualizados com sucesso!'
+                        'message': 'Dados atualizados com sucesso!',
+                        'photo_url': photo_url
                     })
                 else:
                     return JsonResponse({
@@ -313,15 +372,13 @@ def edit_profile_view(request):
                 }, status=500)
             
     elif role == 'funcionario':
-        if hasattr(user, 'employeeprofile'):
-            form_class = EmployeeEditForm
-            instance = user.employeeprofile
-            template = 'accounts/edit_employee.html'
-        else:
-            # Cria um perfil vazio se não existir
-            instance = EmployeeProfile(user=user)
-            form_class = EmployeeEditForm
-            template = 'accounts/edit_employee.html'
+        profile = user.get_profile()
+        if profile and not isinstance(profile, EmployeeProfile):
+            profile = EmployeeProfile.objects.filter(user=user).first()
+
+        form_class = EmployeeEditForm
+        instance = profile or EmployeeProfile(user=user)
+        template = 'accounts/edit_employee.html'
     else:
         # Se não tiver role definido
         return JsonResponse({
@@ -329,8 +386,8 @@ def edit_profile_view(request):
             'message': 'Tipo de usuário não reconhecido.'
         }, status=400)
 
-    # Para aluno e funcionário (fluxo original)
-    if role in ['aluno', 'funcionario']:
+    # Fluxo original apenas para funcionário
+    if role in ['funcionario']:
         # 2. Tratamento do GET (Carregar Formulário)
         if request.method == 'GET':
             form = form_class(instance=instance)

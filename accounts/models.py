@@ -2,6 +2,25 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.exceptions import ValidationError
 import os
+import re
+import time
+def upload_profile_photo(instance, filename):
+    """Sanitize and standardize uploaded profile photo filenames.
+    Generates: profiles/photos/user<id>_<timestamp>.<ext>
+    """
+    # Normalize filename to avoid hidden control chars/newlines that break media URLs
+    base = os.path.basename(filename or '').strip()
+    base = re.sub(r'\s+', '_', base)  # collapse spaces/newlines
+    base = re.sub(r'[^A-Za-z0-9._-]', '', base)  # keep only safe chars
+
+    # Extract extension safely
+    ext = os.path.splitext(base)[1].lower()
+    if ext not in ['.jpg', '.jpeg', '.png']:
+        # Fallback to .jpg if unexpected (validation will also handle allowed types)
+        ext = '.jpg'
+    user_id = getattr(instance, 'user_id', None) or (getattr(instance, 'user', None) and instance.user.id) or 'unknown'
+    safe_name = f"user{user_id}_{int(time.time())}{ext}"
+    return os.path.join('profiles/photos/', safe_name)
 
 
 class User(AbstractUser):
@@ -88,7 +107,7 @@ class BaseProfile(models.Model):
     phone = models.CharField(max_length=20, verbose_name="Telefone")
     birth_date = models.DateField(verbose_name="Data de Nascimento")
     photo = models.ImageField(
-        upload_to='profiles/photos/',
+        upload_to=upload_profile_photo,
         verbose_name="Foto 3x4",
         validators=[validate_image_extension, validate_image_size]
     )
