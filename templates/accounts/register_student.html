@@ -2,6 +2,25 @@
 
 {% block title %}Cadastro de Aluno - AutoEscola{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Estilo para radio buttons de categoria de CNH */
+    .license-option input[type="radio"]:checked + div {
+        border-color: rgb(34, 197, 94) !important;
+        background-color: rgb(240, 253, 244) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .license-option input[type="radio"]:checked + div .bg-green-100 {
+        background-color: rgb(187, 247, 208) !important;
+    }
+    
+    .license-option input[type="radio"]:checked + div p {
+        color: rgb(22, 101, 52);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gray-50 pt-20 pb-12">
     <div class="container mx-auto px-4 max-w-5xl">
@@ -234,6 +253,83 @@
                             {% endif %}
                         </div>
                     </div>
+                </div>
+
+                <!-- Seção 2.5: Categoria de CNH -->
+                <div class="mb-6 rounded-xl border border-green-200 bg-green-50/60 p-6 shadow-inner">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-lg bg-white shadow-card flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20h10a2 2 0 002-2v-6H5v6a2 2 0 002 2zm0 0a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4zM9 12V8m6 0v4M3 10h18"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-green-700">Categoria de CNH</p>
+                            <h2 class="text-xl font-bold text-gray-900">Qual carteira você vai tirar?</h2>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Categoria A -->
+                        <label class="license-option cursor-pointer">
+                            <input type="radio" 
+                                   name="license_categories" 
+                                   value="A" 
+                                   {% if form.license_categories.value == 'A' %}checked{% endif %}
+                                   required
+                                   class="sr-only">
+                            <div class="p-4 rounded-lg border-2 border-green-200 bg-white hover:border-green-400 hover:bg-green-50 transition-all text-center">
+                                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-green-100 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                    </svg>
+                                </div>
+                                <p class="font-semibold text-gray-900">Categoria A</p>
+                                <p class="text-xs text-gray-600 mt-1">🏍️ Motocicleta</p>
+                            </div>
+                        </label>
+
+                        <!-- Categoria B -->
+                        <label class="license-option cursor-pointer">
+                            <input type="radio" 
+                                   name="license_categories" 
+                                   value="B" 
+                                   {% if form.license_categories.value == 'B' %}checked{% endif %}
+                                   required
+                                   class="sr-only">
+                            <div class="p-4 rounded-lg border-2 border-green-200 bg-white hover:border-green-400 hover:bg-green-50 transition-all text-center">
+                                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-green-100 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20h10a2 2 0 002-2v-6H5v6a2 2 0 002 2zm0 0a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z"></path>
+                                    </svg>
+                                </div>
+                                <p class="font-semibold text-gray-900">Categoria B</p>
+                                <p class="text-xs text-gray-600 mt-1">🚗 Carro</p>
+                            </div>
+                        </label>
+
+                        <!-- Ambas as categorias -->
+                        <label class="license-option cursor-pointer">
+                            <input type="radio" 
+                                   name="license_categories" 
+                                   value="AB" 
+                                   {% if form.license_categories.value == 'AB' %}checked{% endif %}
+                                   required
+                                   class="sr-only">
+                            <div class="p-4 rounded-lg border-2 border-green-200 bg-white hover:border-green-400 hover:bg-green-50 transition-all text-center">
+                                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-green-100 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <p class="font-semibold text-gray-900">Ambas</p>
+                                <p class="text-xs text-gray-600 mt-1">🏍️🚗 A e B</p>
+                            </div>
+                        </label>
+                    </div>
+                    {% if form.license_categories.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.license_categories.errors.0 }}</p>
+                    {% endif %}
                 </div>
 
                 <!-- Seção 3: Endereço -->
@@ -757,6 +853,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+        
+        // ============================================
+        // 7. MANIPULAÇÃO DE CATEGORIA DE CNH
+        // ============================================
+        const licenseOptions = document.querySelectorAll('input[name="license_categories"]');
+        licenseOptions.forEach(option => {
+            option.addEventListener('change', function() {
+                // Remove erro anterior, se existir
+                const errorMsg = document.querySelector('[name="license_categories"]').parentNode.nextElementSibling;
+                if (errorMsg && errorMsg.classList.contains('text-red-600')) {
+                    errorMsg.remove();
+                }
+            });
+        });
     }
     
 });

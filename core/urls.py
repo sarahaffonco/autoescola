@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/accept-lesson/<int:lesson_id>/', views.accept_lesson, name='accept_lesson'),
     path('api/reject-lesson/<int:lesson_id>/', views.reject_lesson, name='reject_lesson'),
     path('api/reschedule-lesson/<int:lesson_id>/', views.reschedule_lesson, name='reschedule_lesson'),
+    path('api/cancel-rejected-lesson/<int:lesson_id>/', views.cancel_rejected_lesson, name='cancel_rejected_lesson'),
+    path('api/cancel-lesson/<int:lesson_id>/', views.cancel_lesson, name='cancel_lesson'),
 ]

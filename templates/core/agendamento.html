@@ -519,13 +519,14 @@ document.addEventListener('DOMContentLoaded', function() {
         cepSuccessEl.classList.add('hidden');
     }
 
-    // Carrega instrutores baseado em bairro/logradouro e gênero
+    // Carrega instrutores baseado em bairro/logradouro, gênero e categoria de veículo
     function loadInstructors() {
         const params = new URLSearchParams({
             bairro: currentBairro,
             rua: currentRua,
             gender: currentGender,
-            cep: currentCEP
+            cep: currentCEP,
+            vehicle_type: vehicleTypeSelect.value || ''
         });
 
         instructorSelect.disabled = true;
@@ -615,7 +616,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     vehicleTypeSelect.addEventListener('change', () => {
-        if (instructorSelect.value) {
+        // Recarrega instrutores quando tipo de veículo muda
+        if (currentRua || currentBairro) {
+            loadInstructors();
+        } else if (instructorSelect.value) {
             instructorSelect.dispatchEvent(new Event('change'));
         }
     });

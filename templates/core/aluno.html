@@ -35,8 +35,26 @@
         <div class="mb-8 rounded-2xl gradient-hero p-6 text-white">
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-xl font-bold mb-1">Progresso para CNH - Categoria B</h2>
+                    <h2 class="text-xl font-bold mb-1">
+                        Progresso para CNH - Categoria 
+                        {% if profile.license_categories == 'A' %}
+                            A 🏍️
+                        {% elif profile.license_categories == 'B' %}
+                            B 🚗
+                        {% elif profile.license_categories == 'AB' %}
+                            A e B 🏍️🚗
+                        {% else %}
+                            B 🚗
+                        {% endif %}
+                    </h2>
                     <p class="text-white/80">
+                        {% if profile.license_categories == 'A' %}
+                            Motocicleta
+                        {% elif profile.license_categories == 'B' %}
+                            Automóvel
+                        {% elif profile.license_categories == 'AB' %}
+                            Motocicleta e Automóvel
+                        {% endif %}
                     </p>
                 </div>
                 <div class="flex items-center gap-4">
@@ -138,10 +156,14 @@
                             </div>
                         </div>
 
-                        <div class="mt-2 pt-2 border-t border-green-100">
+                        <div class="mt-3 flex gap-2">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                 ✓ Confirmada
                             </span>
+                            <button class="ml-auto bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg transition-all text-xs"
+                                    onclick="confirmCancelAnyLesson({{ lesson.id }}, '{{ lesson.date|date:'d/m/Y' }} às {{ lesson.time|time:'H:i' }}')">
+                                ❌ Cancelar
+                            </button>
                         </div>
                     </div>
                     {% empty %}
@@ -192,10 +214,14 @@
                             </div>
                         </div>
 
-                        <div class="mt-2 pt-2 border-t border-yellow-100">
+                        <div class="mt-3 flex gap-2">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                                 ⏳ Aguardando
                             </span>
+                            <button class="ml-auto bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg transition-all text-xs"
+                                    onclick="confirmCancelAnyLesson({{ lesson.id }}, '{{ lesson.date|date:'d/m/Y' }} às {{ lesson.time|time:'H:i' }}')">
+                                ❌ Cancelar
+                            </button>
                         </div>
                     </div>
                     {% endfor %}
@@ -247,11 +273,18 @@
                             </div>
                         </div>
 
-                        <button class="reschedule-btn mt-3 w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
-                                data-lesson-id="{{ lesson.id }}"
-                                data-vehicle-type="{{ lesson.vehicle_type }}">
-                            🔄 Remarcar
-                        </button>
+                        <div class="mt-3 flex gap-2">
+                            <button class="reschedule-btn flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
+                                    data-lesson-id="{{ lesson.id }}"
+                                    data-vehicle-type="{{ lesson.vehicle_type }}">
+                                🔄 Remarcar
+                            </button>
+                            <button class="cancel-lesson-btn flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
+                                    data-lesson-id="{{ lesson.id }}"
+                                    onclick="confirmCancelLesson({{ lesson.id }})">
+                                ❌ Cancelar
+                            </button>
+                        </div>
                     </div>
                     {% endfor %}
                     {% if not rejected_lessons %}
@@ -528,6 +561,86 @@
                 }
             }
             return cookieValue;
+        }
+
+        // Função para cancelar definitivamente uma aula recusada
+        function confirmCancelLesson(lessonId) {
+            if (confirm('❌ Tem certeza que deseja cancelar definitivamente esta aula?\n\nEsta ação não pode ser desfeita e a aula será removida permanentemente.')) {
+                const button = event.target;
+                button.disabled = true;
+                button.textContent = 'Cancelando...';
+                
+                fetch(`/api/cancel-rejected-lesson/${lessonId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove o card com animação
+                        const card = document.getElementById(`rejected-lesson-${lessonId}`);
+                        if (card) {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => card.remove(), 300);
+                        }
+                        
+                        alert('✅ Aula cancelada definitivamente.');
+                        
+                        // Recarrega após 1s para atualizar os contadores
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        alert('❌ Erro: ' + data.error);
+                        button.disabled = false;
+                        button.textContent = '❌ Cancelar';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('❌ Erro ao cancelar aula');
+                    button.disabled = false;
+                    button.textContent = '❌ Cancelar';
+                });
+            }
+        }
+
+        // Função genérica para cancelar qualquer aula (próximas, aguardando, etc)
+        function confirmCancelAnyLesson(lessonId, lessonDate) {
+            if (confirm(`❌ Deseja cancelar a aula de ${lessonDate}?\n\nEsta ação não pode ser desfeita.`)) {
+                const button = event.target;
+                button.disabled = true;
+                button.textContent = 'Cancelando...';
+                
+                fetch(`/api/cancel-lesson/${lessonId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ Aula cancelada com sucesso.');
+                        
+                        // Recarrega após 1s para atualizar os contadores
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        alert('❌ Erro: ' + data.error);
+                        button.disabled = false;
+                        button.textContent = '❌ Cancelar';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('❌ Erro ao cancelar aula');
+                    button.disabled = false;
+                    button.textContent = '❌ Cancelar';
+                });
+            }
         }
 
         // Fechar modal ao clicar fora
