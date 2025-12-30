@@ -231,6 +231,72 @@
                             <p class="mt-1 text-sm text-red-600">{{ form.gender_identity.errors.0 }}</p>
                             {% endif %}
                         </div>
+                        
+                        <!-- Categorias de Veículo -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Categorias de Veículo que Trabalha *</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Categoria A -->
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="vehicle_categories" value="A" 
+                                           {% if form.vehicle_categories.value == 'A' %}checked{% endif %}
+                                           required
+                                           class="peer sr-only">
+                                    <div class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 bg-white transition-all peer-checked:border-yellow-500 peer-checked:bg-yellow-50 hover:border-yellow-300">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-white font-bold text-lg">
+                                                A
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-900">Categoria A</p>
+                                            <p class="text-xs text-gray-600">🏍️ Motocicleta</p>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <!-- Categoria B -->
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="vehicle_categories" value="B"
+                                           {% if form.vehicle_categories.value == 'B' or not form.vehicle_categories.value %}checked{% endif %}
+                                           required
+                                           class="peer sr-only">
+                                    <div class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 bg-white transition-all peer-checked:border-yellow-500 peer-checked:bg-yellow-50 hover:border-yellow-300">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-white font-bold text-lg">
+                                                B
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-900">Categoria B</p>
+                                            <p class="text-xs text-gray-600">🚗 Carro</p>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <!-- Ambas -->
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="vehicle_categories" value="AB"
+                                           {% if form.vehicle_categories.value == 'AB' %}checked{% endif %}
+                                           required
+                                           class="peer sr-only">
+                                    <div class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 bg-white transition-all peer-checked:border-yellow-500 peer-checked:bg-yellow-50 hover:border-yellow-300">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-white font-bold text-sm">
+                                                AB
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-900">Ambas</p>
+                                            <p class="text-xs text-gray-600">🏍️ + 🚗</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            {% if form.vehicle_categories.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ form.vehicle_categories.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -272,11 +338,15 @@
                             <label for="id_address" class="block text-sm font-medium text-gray-700 mb-2">Endereço *</label>
                             <input type="text" 
                                    name="address" 
+                                   value="{{ form.address.value|default:'' }}"
                                    id="id_address" 
                                    required
-                                   readonly
-                                   class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white/70 cursor-not-allowed transition-all">
+                                   class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                                   placeholder="Será preenchido automaticamente ou digite manualmente">
                             <p class="mt-1 text-sm text-gray-600">Preenchido automaticamente após CEP ou editável se necessário.</p>
+                            {% if form.address.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Número e Complemento -->
@@ -294,7 +364,7 @@
                             <label for="id_address_complement" class="block text-sm font-medium text-gray-700 mb-2">Complemento</label>
                             <input type="text" 
                                    name="address_complement" 
-                                   value="{{ form.id_address_complement.value|default:'' }}"
+                                   value="{{ form.address_complement.value|default:'' }}"
                                    id="id_address_complement"
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
                         </div>
@@ -586,6 +656,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const cpfInput = document.getElementById('id_cpf');
     if (cpfInput) {
+        // Inicializa o contador com o valor atual
+        const updateCpfCounter = function() {
+            const counter = document.getElementById('cpfCounter');
+            if (counter) {
+                const digits = cpfInput.value.replace(/\D/g, '');
+                counter.textContent = `(${digits.length}/11)`;
+                counter.className = `font-medium ${digits.length === 11 ? 'text-green-600' : 'text-amber-700'}`;
+            }
+        };
+        
+        // Atualiza contador ao carregar a página
+        updateCpfCounter();
+        
         cpfInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 11) value = value.substring(0, 11);
@@ -602,12 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Atualiza contador
-            const counter = document.getElementById('cpfCounter');
-            if (counter) {
-                const digits = e.target.value.replace(/\D/g, '');
-                counter.textContent = `(${digits.length}/11)`;
-                counter.className = `text-sm ${digits.length === 11 ? 'text-green-600' : 'text-red-600'}`;
-            }
+            updateCpfCounter();
         });
     }
     
@@ -616,6 +694,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const rgInput = document.getElementById('id_rg');
     if (rgInput) {
+        // Inicializa o contador com o valor atual
+        const updateRgCounter = function() {
+            const counter = document.getElementById('rgCounter');
+            if (counter) {
+                const alphanum = rgInput.value.replace(/[^A-Za-z0-9]/g, '');
+                counter.textContent = `(${alphanum.length} caracteres)`;
+                counter.className = `font-medium ${alphanum.length >= 8 && alphanum.length <= 12 ? 'text-green-600' : 'text-amber-700'}`;
+            }
+        };
+        
+        // Atualiza contador ao carregar a página
+        updateRgCounter();
+        
         rgInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/[^A-Za-z0-9.-]/g, '');
             if (value.length > 20) value = value.substring(0, 20);
@@ -654,12 +745,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Atualiza contador
-            const counter = document.getElementById('rgCounter');
-            if (counter) {
-                const alphanum = e.target.value.replace(/[^A-Za-z0-9]/g, '');
-                counter.textContent = `(${alphanum.length} caracteres)`;
-                counter.className = `text-sm ${alphanum.length >= 8 && alphanum.length <= 12 ? 'text-green-600' : 'text-red-600'}`;
-            }
+            updateRgCounter();
         });
     }
     
@@ -671,6 +757,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const cepBaseInput = document.getElementById('id_cep_base');
     
     if (cepInput) {
+        // Inicializa o contador com o valor atual
+        const updateCepCounter = function() {
+            const counter = document.getElementById('cepCounter');
+            if (counter) {
+                const digits = cepInput.value.replace(/\D/g, '');
+                counter.textContent = `(${digits.length}/8)`;
+                counter.className = `font-medium ${digits.length === 8 ? 'text-green-600' : 'text-amber-700'}`;
+            }
+        };
+        
+        // Atualiza contador ao carregar a página
+        updateCepCounter();
+        
         cepInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 8) value = value.substring(0, 8);
@@ -682,12 +781,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Atualiza contador
-            const counter = document.getElementById('cepCounter');
-            if (counter) {
-                const digits = e.target.value.replace(/\D/g, '');
-                counter.textContent = `(${digits.length}/8)`;
-                counter.className = `text-sm ${digits.length === 8 ? 'text-green-600' : 'text-red-600'}`;
-            }
+            updateCepCounter();
         });
         
         // Busca automática de CEP
@@ -707,13 +801,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const formattedAddress = `${data.logradouro || ''}, ${data.bairro || ''}, ${data.localidade || ''} - ${data.uf || ''}`;
                         addressInput.value = formattedAddress.trim();
                         
-                        // Remove readonly e permite edição
-                        addressInput.readOnly = false;
-                        addressInput.classList.remove('bg-gray-50', 'cursor-not-allowed');
-                        addressInput.classList.add('bg-white', 'cursor-text');
-                        
                         // Adiciona borda de sucesso
-                        this.classList.remove('border-gray-300');
+                        this.classList.remove('border-amber-200');
                         this.classList.add('border-green-500');
                         
                     } else {
@@ -723,15 +812,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Erro ao buscar CEP:', error);
                     
                     // Adiciona borda de erro
-                    this.classList.remove('border-gray-300');
+                    this.classList.remove('border-amber-200');
                     this.classList.add('border-red-500');
                     
-                    // Mantém campo de endereço vazio mas editável
-                    addressInput.value = '';
-                    addressInput.readOnly = false;
-                    addressInput.classList.remove('bg-gray-50', 'cursor-not-allowed');
-                    addressInput.classList.add('bg-white', 'cursor-text');
-                    addressInput.placeholder = 'Digite o endereço manualmente';
+                    // Define placeholder para edição manual
+                    if (!addressInput.value) {
+                        addressInput.placeholder = 'Digite o endereço manualmente';
+                    }
                 } finally {
                     this.classList.remove('bg-gray-100');
                 }
@@ -807,15 +894,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const renavamInput = document.getElementById('id_vehicle_renavam');
     if (renavamInput) {
+        // Inicializa o contador com o valor atual
+        const updateRenavamCounter = function() {
+            const counter = document.getElementById('renavamCounter');
+            if (counter) {
+                const value = renavamInput.value.replace(/\D/g, '');
+                counter.textContent = `(${value.length}/11)`;
+                counter.className = `font-medium ${value.length === 11 ? 'text-green-600' : 'text-amber-700'}`;
+            }
+        };
+        
+        // Atualiza contador ao carregar a página
+        updateRenavamCounter();
+        
         renavamInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 11) value = value.substring(0, 11);
             e.target.value = value;
-            const counter = document.getElementById('renavamCounter');
-            if (counter) {
-                counter.textContent = `(${value.length}/11)`;
-                counter.className = `text-sm ${value.length === 11 ? 'text-green-600' : 'text-gray-500'}`;
-            }
+            updateRenavamCounter();
         });
     }
 

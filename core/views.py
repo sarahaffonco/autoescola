@@ -40,13 +40,12 @@ def instrutor_dashboard(request):
         'average_rating': round(avg_rating, 1) if avg_rating else None,
     }
     
-    # Get upcoming lessons (today and tomorrow)
+    # Get upcoming lessons (next 3 lessons)
     upcoming_lessons = Lesson.objects.filter(
         instructor=request.user,
         date__gte=today,
-        date__lte=today + timedelta(days=1),
         status__in=['scheduled', 'in-progress']
-    ).select_related('student')[:4]
+    ).select_related('student').order_by('date', 'time')[:3]
     
     # Get pending lessons (awaiting instructor confirmation)
     pending_lessons = Lesson.objects.filter(
@@ -106,6 +105,10 @@ def aluno_dashboard(request):
     total_hours = completed_lessons.count() * 50 // 60  # Convert to hours
     required_hours = 20
     
+    # Get all instructors for reschedule modal
+    from accounts.models import User
+    instructors = User.objects.filter(role='instrutor', is_active=True).select_related('instructorprofile_profile')
+    
     stats = {
         'upcoming_lessons': upcoming_lessons.count(),
         'total_hours': total_hours,
@@ -124,6 +127,7 @@ def aluno_dashboard(request):
         'total_hours': total_hours,
         'required_hours': required_hours,
         'progress_percentage': min(100, (total_hours / required_hours) * 100),
+        'instructors': instructors,
     }
     
     return render(request, 'core/aluno.html', context)
@@ -389,10 +393,11 @@ def reschedule_lesson(request, lesson_id):
         data = json.loads(request.body)
         new_date = data.get('date')
         new_time = data.get('time')
+        new_instructor_id = data.get('instructor_id')
         
         # Busca a aula original (recusada)
         try:
-            original_lesson = Lesson.objects.get(
+            lesson = Lesson.objects.get(
                 id=lesson_id,
                 student=request.user,
                 status='cancelled'
@@ -404,44 +409,28 @@ def reschedule_lesson(request, lesson_id):
         if not new_date or not new_time:
             return JsonResponse({'error': 'Data e hora são obrigatórios'}, status=400)
         
-        # Cria nova aula com os mesmos dados
-        new_lesson = Lesson.objects.create(
-            student=original_lesson.student,
-            instructor=original_lesson.instructor,
-            date=new_date,
-            time=new_time,
-            duration=original_lesson.duration,
-            cep=original_lesson.cep,
-            rua=original_lesson.rua,
-            numero=original_lesson.numero,
-            bairro=original_lesson.bairro,
-            cidade=original_lesson.cidade,
-            estado=original_lesson.estado,
-            location=original_lesson.location,
-            vehicle_type=original_lesson.vehicle_type,
-            vehicle=original_lesson.vehicle,
-            lesson_number=original_lesson.lesson_number,
-            prefer_adapted_pcd=original_lesson.prefer_adapted_pcd,
-            prefer_dual_control=original_lesson.prefer_dual_control,
-            status='pending'
-        )
+        # Atualiza a aula existente com os novos dados
+        lesson.date = new_date
+        lesson.time = new_time
+        lesson.status = 'pending'  # Muda de 'cancelled' para 'pending'
         
-        # Marca a aula original como remarcada e deleta para não aparecer mais
-        original_lesson.status = 'rescheduled'  # Novo status para identificar que foi remarcada
-        original_lesson.notes = f"Remarcada em {date.today().strftime('%d/%m/%Y')} para {new_date} às {new_time} (ID: {new_lesson.id})"
-        original_lesson.save()
+        # Se um novo instrutor foi selecionado, atualizar
+        if new_instructor_id:
+            try:
+                from accounts.models import User
+                new_instructor = User.objects.get(id=new_instructor_id, role='instrutor')
+                lesson.instructor = new_instructor
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'Instrutor não encontrado'}, status=404)
         
-        return JsonResponse({
-            'success': True,
-            'message': 'Aula remarcada com sucesso! Aguarde a confirmação do instrutor.',
-            'lesson_id': new_lesson.id,
-        })
+        lesson.save()
+        
+        return JsonResponse({'success': True, 'message': 'Aula remarcada com sucesso'})
         
     except json.JSONDecodeError:
         return JsonResponse({'error': 'JSON inválido'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
 
 @login_required
 def cancel_rejected_lesson(request, lesson_id):
@@ -485,6 +474,40 @@ def cancel_lesson(request, lesson_id):
         )
         
         # Verifica se a aula pode ser cancelada (não pode cancelar aulas já completadas ou em andamento)
+        if lesson.status in ['completed', 'in-progress']:
+            return JsonResponse({'error': 'Esta aula não pode ser cancelada'}, status=400)
+        
+        # Deleta a aula definitivamente
+        lesson.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Aula cancelada com sucesso.'
+        })
+        
+    except Lesson.DoesNotExist:
+        return JsonResponse({'error': 'Aula não encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def instructor_cancel_lesson(request, lesson_id):
+    """Endpoint para instrutor cancelar uma aula confirmada"""
+    if request.user.role != 'instrutor':
+        return JsonResponse({'error': 'Apenas instrutores podem cancelar aulas'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    try:
+        # Busca a aula do instrutor
+        lesson = Lesson.objects.get(
+            id=lesson_id,
+            instructor=request.user
+        )
+        
+        # Verifica se a aula pode ser cancelada
         if lesson.status in ['completed', 'in-progress']:
             return JsonResponse({'error': 'Esta aula não pode ser cancelada'}, status=400)
         

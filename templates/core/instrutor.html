@@ -245,7 +245,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h2 class="text-2xl font-bold text-gray-900">Próximas Aulas</h2>
-                            <p class="text-gray-600">Suas aulas agendadas para hoje e amanhã</p>
+                            <p class="text-gray-600">Suas próximas aulas agendadas</p>
                         </div>
                     </div>
 
@@ -290,17 +290,17 @@
                                     </svg>
                                     {{ lesson.time|time:"H:i" }}
                                 </div>
-                                <div class="flex items-center gap-2 text-gray-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="col-span-2 flex items-start gap-2 text-gray-600">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
                                         </path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg>
-                                    {{ lesson.location|truncatewords:2 }}
+                                    <span class="text-xs">{{ lesson.rua }}{% if lesson.numero %}, {{ lesson.numero }}{% endif %}{% if lesson.bairro %} - {{ lesson.bairro }}{% endif %}</span>
                                 </div>
-                                <div class="flex items-center gap-2 text-gray-600">
+                                <div class="col-span-2 flex items-center gap-2 text-gray-600">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -308,6 +308,15 @@
                                     Categoria {{ lesson.vehicle_type }}
                                 </div>
                             </div>
+                            
+                            <!-- Botão de Cancelar -->
+                            <button onclick="cancelInstructorLesson({{ lesson.id }}, '{{ lesson.student.first_name }}', '{{ lesson.date|date:"d/m/Y" }}')"
+                                    class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Cancelar Aula
+                            </button>
                         </div>
                         {% empty %}
                         <div class="col-span-3 text-center py-12 text-gray-500">
@@ -594,6 +603,34 @@
                 alert('❌ Erro ao recusar aula');
                 button.disabled = false;
                 button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> Recusar';
+            });
+        }
+
+        // Cancelar aula confirmada (instrutor)
+        function cancelInstructorLesson(lessonId, studentName, lessonDate) {
+            if (!confirm(`Tem certeza que deseja cancelar a aula com ${studentName} no dia ${lessonDate}?\n\nEsta ação não pode ser desfeita e o aluno será notificado.`)) {
+                return;
+            }
+
+            fetch(`/api/instructor-cancel-lesson/${lessonId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    location.reload(); // Recarrega a página para atualizar a lista
+                } else {
+                    alert('❌ Erro: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Erro ao cancelar aula');
             });
         }
     </script>

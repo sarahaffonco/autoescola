@@ -335,6 +335,18 @@ class InstructorRegistrationForm(BaseRegistrationForm):
         label='CEP da Base/Garagem',
         widget=forms.TextInput(attrs={'placeholder': '00000-000'})
     )
+    
+    vehicle_categories = forms.ChoiceField(
+        required=True,
+        label='Categorias de Veículo que Trabalha',
+        choices=[
+            ('A', 'Categoria A - Motocicleta'),
+            ('B', 'Categoria B - Carro'),
+            ('AB', 'Ambas as categorias'),
+        ],
+        help_text='Qual(is) categoria(s) de veículo você trabalha'
+    )
+    
     cnh = forms.CharField(
         max_length=30,
         required=True,
@@ -548,6 +560,7 @@ class InstructorRegistrationForm(BaseRegistrationForm):
                 support_document_2=self.cleaned_data.get('support_document_2'),
                 gender_identity=self.cleaned_data['gender_identity'],
                 cep_base=self.cleaned_data.get('cep_base', ''),
+                vehicle_categories=self.cleaned_data['vehicle_categories'],
                 status='pendente',  # Aguarda aprovação
                 rating=0.0,
                 total_students=0,
@@ -1099,6 +1112,17 @@ class StudentPersonalEditForm(forms.Form):
         })
     )
     
+    cep = forms.CharField(
+        required=False,
+        max_length=9,
+        label='CEP',
+        help_text='Endereço residencial',
+        widget=forms.TextInput(attrs={
+            'placeholder': '00000-000',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
+    
     def __init__(self, *args, user=None, profile=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
@@ -1110,6 +1134,7 @@ class StudentPersonalEditForm(forms.Form):
             self.fields['email'].initial = user.email
         if profile:
             self.fields['gender_identity'].initial = getattr(profile, 'gender_identity', '')
+            self.fields['cep'].initial = getattr(profile, 'cep', '')
     
     def clean_username(self):
         """Valida que o username é único"""
@@ -1148,6 +1173,9 @@ class StudentPersonalEditForm(forms.Form):
         
         self.user.save()
         
+        # Variável para rastrear aulas canceladas
+        cancelled_lessons_count = 0
+        
         # Atualiza a foto no profile se fornecida
         if self.cleaned_data.get('photo'):
             # Se não existe perfil, cria um vazio (student sem dados completos)
@@ -1174,7 +1202,36 @@ class StudentPersonalEditForm(forms.Form):
             self.profile.gender_identity = self.cleaned_data['gender_identity']
             self.profile.save(update_fields=['gender_identity'])
         
-        return self.user
+        # Atualiza CEP, se fornecido
+        if self.cleaned_data.get('cep') is not None and self.profile:
+            old_cep = getattr(self.profile, 'cep', '')
+            new_cep = self.cleaned_data['cep']
+            
+            # Remove formatação para comparação
+            old_cep_clean = ''.join(filter(str.isdigit, old_cep)) if old_cep else ''
+            new_cep_clean = ''.join(filter(str.isdigit, new_cep)) if new_cep else ''
+            
+            # Se o CEP mudou, cancela todas as aulas agendadas do aluno
+            if old_cep_clean and new_cep_clean and old_cep_clean != new_cep_clean:
+                from lessons.models import Lesson
+                
+                # Busca aulas pendentes e agendadas (não concluídas)
+                result = Lesson.objects.filter(
+                    student=self.user,
+                    status__in=['pending', 'scheduled']
+                ).delete()
+                
+                cancelled_lessons_count = result[0] if result else 0
+                print(f"[CEP Change] Canceladas {cancelled_lessons_count} aulas devido à mudança de endereço")
+            
+            self.profile.cep = self.cleaned_data['cep']
+            self.profile.save(update_fields=['cep'])
+        
+        # Retorna o usuário e informações adicionais
+        return {
+            'user': self.user,
+            'cancelled_lessons': cancelled_lessons_count
+        }
 
 
 class EmployeeEditForm(forms.ModelForm):
