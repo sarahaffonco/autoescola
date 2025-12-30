@@ -319,10 +319,14 @@ def edit_profile_view(request):
             
             try:
                 if form.is_valid():
-                    form.save()
+                    result = form.save()
+                    
+                    # Extrai informações do resultado
+                    saved_user = result.get('user') if isinstance(result, dict) else result
+                    cancelled_lessons = result.get('cancelled_lessons', 0) if isinstance(result, dict) else 0
 
                     # Garante a URL absoluta mais recente da foto para atualizar o avatar do usuário
-                    profile = user.get_profile()
+                    profile = saved_user.get_profile()
                     print(f"[StudentProfile POST] Profile after save: {profile}")
                     print(f"[StudentProfile POST] Profile.photo: {profile.photo if profile else 'None'}")
                     print(f"[StudentProfile POST] Profile.photo.name: {profile.photo.name if profile and profile.photo else 'None'}")
@@ -334,10 +338,16 @@ def edit_profile_view(request):
                         photo_url = f"{request.build_absolute_uri(profile.photo.url)}?v={version}"
                         print(f"[StudentProfile POST] Photo URL: {photo_url}")
 
+                    # Mensagem personalizada se houve cancelamento de aulas
+                    message = 'Dados atualizados com sucesso!'
+                    if cancelled_lessons > 0:
+                        message = f'Dados atualizados! {cancelled_lessons} aula(s) cancelada(s) devido à mudança de endereço. Por favor, agende novas aulas.'
+
                     return JsonResponse({
                         'success': True,
-                        'message': 'Dados atualizados com sucesso!',
-                        'photo_url': photo_url
+                        'message': message,
+                        'photo_url': photo_url,
+                        'cancelled_lessons': cancelled_lessons
                     })
                 else:
                     return JsonResponse({
