@@ -251,6 +251,15 @@ class StudentRegistrationForm(BaseRegistrationForm):
             ('TW', 'Mulher Transgênero'),
         ]
     )
+    license_categories = forms.ChoiceField(
+        required=True,
+        label='Qual(is) categoria(s) de CNH você vai tirar?',
+        choices=[
+            ('A', 'Categoria A - Motocicleta'),
+            ('B', 'Categoria B - Carro'),
+            ('AB', 'Ambas as categorias'),
+        ]
+    )
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -295,6 +304,7 @@ class StudentRegistrationForm(BaseRegistrationForm):
                 address_number=self.cleaned_data['address_number'],
                 address_complement=self.cleaned_data.get('address_complement', ''),
                 gender_identity=self.cleaned_data['gender_identity'],
+                license_categories=self.cleaned_data['license_categories'],
                 # Campos específicos do aluno
                 status='ativo',
                 progress=0,
@@ -793,12 +803,13 @@ class StudentEditForm(forms.ModelForm):
         fields = [
             'full_name', 'email', 'phone', 'birth_date',
             'cpf', 'rg', 'cep', 'address', 'address_number', 'address_complement',
-            'photo', 'gender_identity'
+            'photo', 'gender_identity', 'license_categories'
         ]
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
             'photo': forms.FileInput(),
             'gender_identity': forms.Select(),
+            'license_categories': forms.Select(),
         }
     
     def __init__(self, *args, **kwargs):
@@ -924,6 +935,17 @@ class InstructorPersonalEditForm(forms.Form):
         })
     )
     
+    cep_base = forms.CharField(
+        required=False,
+        max_length=9,
+        label='CEP da Base/Garagem',
+        help_text='Local de início das aulas (ponto de encontro com alunos)',
+        widget=forms.TextInput(attrs={
+            'placeholder': '00000-000',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
+    
     def __init__(self, *args, user=None, profile=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
@@ -935,6 +957,7 @@ class InstructorPersonalEditForm(forms.Form):
             self.fields['email'].initial = user.email
         if profile:
             self.fields['gender_identity'].initial = getattr(profile, 'gender_identity', '')
+            self.fields['cep_base'].initial = getattr(profile, 'cep_base', '')
     
     def clean_username(self):
         """Valida que o username é único"""
@@ -1004,6 +1027,11 @@ class InstructorPersonalEditForm(forms.Form):
             if hasattr(self.profile, 'set_gender_from_identity'):
                 self.profile.set_gender_from_identity()
             self.profile.save(update_fields=['gender_identity', 'gender'])
+        
+        # Atualiza CEP da base, se fornecido
+        if self.cleaned_data.get('cep_base') is not None and self.profile:
+            self.profile.cep_base = self.cleaned_data['cep_base']
+            self.profile.save(update_fields=['cep_base'])
         
         return self.user
 

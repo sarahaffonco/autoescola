@@ -10,6 +10,7 @@ class Lesson(models.Model):
         ('in-progress', 'Em Andamento'),
         ('completed', 'Completada'),
         ('cancelled', 'Cancelada'),
+        ('rescheduled', 'Remarcada'),
     )
     
     VEHICLE_TYPE_CHOICES = (

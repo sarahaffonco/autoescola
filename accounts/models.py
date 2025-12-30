@@ -209,6 +209,19 @@ class StudentProfile(BaseProfile):
         help_text="Informação de identidade de gênero do aluno"
     )
     
+    # Categoria de CNH que o aluno está tirando
+    license_categories = models.CharField(
+        max_length=2,
+        choices=(
+            ('A', 'Categoria A - Motocicleta'),
+            ('B', 'Categoria B - Carro'),
+            ('AB', 'Ambas as categorias'),
+        ),
+        default='B',
+        verbose_name="Categoria(s) de CNH",
+        help_text="Qual(is) categoria(s) de CNH o aluno está tirar"
+    )
+    
     # Documentos de suporte opcionais
     support_document_1 = models.FileField(
         upload_to='students/documents/',
@@ -320,6 +333,19 @@ class InstructorProfile(BaseProfile):
         verbose_name="CEP da Base/Garagem",
         blank=True,
         help_text="CEP onde o instrutor inicia as aulas"
+    )
+    
+    # Categorias de veículos que o instrutor trabalha
+    vehicle_categories = models.CharField(
+        max_length=2,
+        choices=(
+            ('A', 'Categoria A - Motocicleta'),
+            ('B', 'Categoria B - Carro'),
+            ('AB', 'Ambas as categorias'),
+        ),
+        default='B',
+        verbose_name="Categorias de Veículo",
+        help_text="Qual(is) categoria(s) de veículo o instrutor trabalha"
     )
 
     def set_gender_from_identity(self):

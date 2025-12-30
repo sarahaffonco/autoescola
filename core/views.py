@@ -90,7 +90,7 @@ def aluno_dashboard(request):
         status='scheduled'
     ).order_by('date', 'time').select_related('instructor')[:3]
     
-    # Get rejected lessons (awaiting reschedule)
+    # Get rejected lessons (awaiting reschedule) - excluding rescheduled ones
     rejected_lessons = Lesson.objects.filter(
         student=request.user,
         status='cancelled'
@@ -203,13 +203,14 @@ def lookup_cep(request):
 
 
 def filter_instructors(request):
-    """API endpoint para filtrar instrutores por bairro/logradouro (ou CEP opcional) e gênero"""
+    """API endpoint para filtrar instrutores por bairro/logradouro (ou CEP opcional), gênero e categoria de veículo"""
     from accounts.models import User
 
     bairro = request.GET.get('bairro', '').strip()
     rua = request.GET.get('rua', '').strip()
     gender = request.GET.get('gender', '')
     cep = request.GET.get('cep', '').strip()
+    vehicle_type = request.GET.get('vehicle_type', '').strip()
 
     cep_digits = ''.join(filter(str.isdigit, cep))
     cep_prefix = cep_digits[:5] if len(cep_digits) >= 5 else ''
@@ -228,6 +229,13 @@ def filter_instructors(request):
     # Filtra por gênero se fornecido
     if gender in ['M', 'F']:
         instructors_base = instructors_base.filter(instructorprofile_profile__gender=gender)
+
+    # Filtra por categoria de veículo se fornecida
+    if vehicle_type in ['A', 'B']:
+        instructors_base = instructors_base.filter(
+            Q(instructorprofile_profile__vehicle_categories='AB') |
+            Q(instructorprofile_profile__vehicle_categories=vehicle_type)
+        )
 
     # Combina filtros de endereço/CEP com OR para não excluir matches válidos
     address_filters = Q()
@@ -266,6 +274,7 @@ def filter_instructors(request):
         })
     
     return JsonResponse({'instructors': result})
+
 
 
 def filter_vehicles(request):
@@ -417,8 +426,9 @@ def reschedule_lesson(request, lesson_id):
             status='pending'
         )
         
-        # Marca a aula original como remarcada
-        original_lesson.notes = f"Remarcada em {date.today().strftime('%d/%m/%Y')} para {new_date} às {new_time}"
+        # Marca a aula original como remarcada e deleta para não aparecer mais
+        original_lesson.status = 'rescheduled'  # Novo status para identificar que foi remarcada
+        original_lesson.notes = f"Remarcada em {date.today().strftime('%d/%m/%Y')} para {new_date} às {new_time} (ID: {new_lesson.id})"
         original_lesson.save()
         
         return JsonResponse({
@@ -429,6 +439,65 @@ def reschedule_lesson(request, lesson_id):
         
     except json.JSONDecodeError:
         return JsonResponse({'error': 'JSON inválido'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def cancel_rejected_lesson(request, lesson_id):
+    """Endpoint para o aluno cancelar definitivamente uma aula recusada"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    try:
+        # Busca a aula recusada
+        lesson = Lesson.objects.get(
+            id=lesson_id,
+            student=request.user,
+            status='cancelled'
+        )
+        
+        # Deleta a aula definitivamente
+        lesson.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Aula cancelada definitivamente.'
+        })
+        
+    except Lesson.DoesNotExist:
+        return JsonResponse({'error': 'Aula não encontrada ou já foi processada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def cancel_lesson(request, lesson_id):
+    """Endpoint genérico para o aluno cancelar qualquer aula (agendada, pendente, etc)"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    try:
+        # Busca a aula do aluno
+        lesson = Lesson.objects.get(
+            id=lesson_id,
+            student=request.user
+        )
+        
+        # Verifica se a aula pode ser cancelada (não pode cancelar aulas já completadas ou em andamento)
+        if lesson.status in ['completed', 'in-progress']:
+            return JsonResponse({'error': 'Esta aula não pode ser cancelada'}, status=400)
+        
+        # Deleta a aula definitivamente
+        lesson.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Aula cancelada com sucesso.'
+        })
+        
+    except Lesson.DoesNotExist:
+        return JsonResponse({'error': 'Aula não encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
