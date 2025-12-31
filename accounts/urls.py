@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, api_views
 from .delete_views import delete_account_view
 
 urlpatterns = [
@@ -11,6 +11,14 @@ urlpatterns = [
     path('register/instructor/', views.register_instructor_view, name='register_instructor'),
     path('register/employee/', views.register_employee_view, name='register_employee'),
     path('logout/', views.logout_view, name='logout'),
+    
+    # API REST
+    path('api/register/instrutor/', api_views.register_api_instrutor, name='api_register_instrutor'),
+    path('api/register/funcionario/', api_views.register_api_funcionario, name='api_register_funcionario'),
+    path('api/register/aluno/', api_views.register_api_aluno, name='api_register_aluno'),
+    path('api/login/', api_views.login_api, name='api_login'),
+    path('api/me/', api_views.me_api, name='api_me'),
+    path('api/logout/', api_views.logout_api, name='api_logout'),
     
     # Dashboards
     path('dashboard/aluno/', views.aluno_dashboard, name='aluno_dashboard'),

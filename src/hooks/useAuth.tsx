@@ -2,7 +2,22 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'instrutor' | 'funcionario';
+type AppRole = 'instrutor' | 'funcionario' | 'aluno';
+
+function getCookie(name: string): string {
+  let cookieValue = '';
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === name + '=') {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -71,48 +86,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string, 
     fullName: string, 
     phone: string, 
-    role: AppRole
+    role: AppRole,
+    photo?: File | null
   ): Promise<{ error: Error | null }> => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
+    try {
+      let endpoint;
+      if (role === 'instrutor') {
+        endpoint = '/auth/api/register/instrutor/';
+      } else if (role === 'funcionario') {
+        endpoint = '/auth/api/register/funcionario/';
+      } else {
+        endpoint = '/auth/api/register/aluno/';
       }
-    });
-
-    if (error) {
-      return { error };
-    }
-
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: data.user.id,
-          full_name: fullName,
-          phone: phone,
+      
+      // Se tem foto, usa FormData, senão usa JSON
+      let response;
+      if (photo) {
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('full_name', fullName);
+        formData.append('phone', phone);
+        formData.append('photo', photo);
+        
+        response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          credentials: 'include',
+          body: formData,
         });
-
-      if (profileError) {
-        return { error: profileError };
-      }
-
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: data.user.id,
-          role: role,
+      } else {
+        response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            email,
+            password,
+            full_name: fullName,
+            phone,
+          }),
         });
-
-      if (roleError) {
-        return { error: roleError };
       }
-    }
 
-    return { error: null };
+      const data = await response.json();
+
+      if (!response.ok) {
+        const error = new Error(data.error || 'Erro ao cadastrar');
+        (error as any).details = data.errors || {};
+        return { error };
+      }
+
+      // Faz login automático após cadastro
+      const loginResponse = await fetch('http://127.0.0.1:8000/auth/api/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (loginResponse.ok) {
+        window.location.href = '/';
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: err as Error };
+    }
   };
 
   const signIn = async (email: string, password: string): Promise<{ error: Error | null }> => {

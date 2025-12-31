@@ -28,7 +28,10 @@ class Lesson(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='instructor_lessons',
-        limit_choices_to={'role': 'instrutor'}
+        limit_choices_to={'role': 'instrutor'},
+        null=True,
+        blank=True,
+        verbose_name='Instrutor'
     )
     date = models.DateField()
     time = models.TimeField()
@@ -42,7 +45,7 @@ class Lesson(models.Model):
     estado = models.CharField(max_length=2, verbose_name="Estado", blank=True)
     # Campo legado para compatibilidade
     location = models.CharField(max_length=255, blank=True)
-    vehicle_type = models.CharField(max_length=1, choices=VEHICLE_TYPE_CHOICES)
+    vehicle_type = models.CharField(max_length=1, choices=VEHICLE_TYPE_CHOICES, null=True, blank=True, verbose_name='Tipo de Veículo')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     score = models.CharField(max_length=50, blank=True, help_text="Avaliação da aula")
     notes = models.TextField(blank=True)
