@@ -887,6 +887,16 @@ class InstructorEditForm(forms.ModelForm):
 
 class InstructorPersonalEditForm(forms.Form):
     """Formulário simplificado para edição de dados pessoais do instrutor"""
+    full_name = forms.CharField(
+        max_length=255,
+        required=True,
+        label='Nome Completo',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Seu nome completo',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
+    
     username = forms.CharField(
         max_length=150,
         required=True,
@@ -966,6 +976,7 @@ class InstructorPersonalEditForm(forms.Form):
         
         # Preenche os valores iniciais
         if user:
+            self.fields['full_name'].initial = user.full_name
             self.fields['username'].initial = user.username
             self.fields['email'].initial = user.email
         if profile:
@@ -986,6 +997,22 @@ class InstructorPersonalEditForm(forms.Form):
             raise ValidationError('Este email já está cadastrado')
         return email
     
+    def clean_photo(self):
+        """Valida a foto"""
+        photo = self.cleaned_data.get('photo')
+        if photo:
+            # Validação do tipo de arquivo
+            valid_extensions = ['.jpg', '.jpeg', '.png']
+            if not any(photo.name.lower().endswith(ext) for ext in valid_extensions):
+                raise ValidationError('Apenas arquivos JPG, JPEG e PNG são permitidos.')
+            
+            # Validação do tamanho do arquivo
+            max_size = 5 * 1024 * 1024  # 5MB
+            if photo.size > max_size:
+                raise ValidationError(f'A foto deve ter no máximo {max_size // (1024*1024)}MB')
+        
+        return photo
+    
     def clean(self):
         """Valida que as senhas coincidem"""
         cleaned_data = super().clean()
@@ -1000,6 +1027,7 @@ class InstructorPersonalEditForm(forms.Form):
     def save(self):
         """Salva as alterações no User e no Profile"""
         # Atualiza o User
+        self.user.full_name = self.cleaned_data['full_name']
         self.user.username = self.cleaned_data['username']
         self.user.email = self.cleaned_data['email']
         
@@ -1051,6 +1079,16 @@ class InstructorPersonalEditForm(forms.Form):
 
 class StudentPersonalEditForm(forms.Form):
     """Formulário simplificado para edição de dados pessoais do aluno"""
+    full_name = forms.CharField(
+        max_length=255,
+        required=True,
+        label='Nome Completo',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Seu nome completo',
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all'
+        })
+    )
+    
     username = forms.CharField(
         max_length=150,
         required=True,
@@ -1130,6 +1168,7 @@ class StudentPersonalEditForm(forms.Form):
         
         # Preenche os valores iniciais
         if user:
+            self.fields['full_name'].initial = user.full_name
             self.fields['username'].initial = user.username
             self.fields['email'].initial = user.email
         if profile:
@@ -1150,6 +1189,22 @@ class StudentPersonalEditForm(forms.Form):
             raise ValidationError('Este email já está cadastrado')
         return email
     
+    def clean_photo(self):
+        """Valida a foto"""
+        photo = self.cleaned_data.get('photo')
+        if photo:
+            # Validação do tipo de arquivo
+            valid_extensions = ['.jpg', '.jpeg', '.png']
+            if not any(photo.name.lower().endswith(ext) for ext in valid_extensions):
+                raise ValidationError('Apenas arquivos JPG, JPEG e PNG são permitidos.')
+            
+            # Validação do tamanho do arquivo
+            max_size = 5 * 1024 * 1024  # 5MB
+            if photo.size > max_size:
+                raise ValidationError(f'A foto deve ter no máximo {max_size // (1024*1024)}MB')
+        
+        return photo
+    
     def clean(self):
         """Valida que as senhas coincidem"""
         cleaned_data = super().clean()
@@ -1164,6 +1219,7 @@ class StudentPersonalEditForm(forms.Form):
     def save(self):
         """Salva as alterações no User e no Profile"""
         # Atualiza o User
+        self.user.full_name = self.cleaned_data['full_name']
         self.user.username = self.cleaned_data['username']
         self.user.email = self.cleaned_data['email']
         
@@ -1222,7 +1278,6 @@ class StudentPersonalEditForm(forms.Form):
                 ).delete()
                 
                 cancelled_lessons_count = result[0] if result else 0
-                print(f"[CEP Change] Canceladas {cancelled_lessons_count} aulas devido à mudança de endereço")
             
             self.profile.cep = self.cleaned_data['cep']
             self.profile.save(update_fields=['cep'])

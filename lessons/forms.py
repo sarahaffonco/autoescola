@@ -35,6 +35,9 @@ class LessonForm(forms.ModelForm):
         # Configura o queryset de veículos disponíveis
         self.fields['vehicle'].queryset = InstructorVehicle.objects.select_related('instructor').all()
         self.fields['vehicle'].required = False
+        # Define campos opcionais
+        self.fields['instructor'].required = False
+        self.fields['vehicle_type'].required = False
         # Rótulos amigáveis
         self.fields['prefer_dual_control'].label = 'Preferência por veículo com acionamento duplo'
         self.fields['prefer_adapted_pcd'].label = 'Preferência por veículo adaptado para PCD'

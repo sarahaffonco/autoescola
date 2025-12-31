@@ -327,16 +327,11 @@ def edit_profile_view(request):
 
                     # Garante a URL absoluta mais recente da foto para atualizar o avatar do usuário
                     profile = saved_user.get_profile()
-                    print(f"[StudentProfile POST] Profile after save: {profile}")
-                    print(f"[StudentProfile POST] Profile.photo: {profile.photo if profile else 'None'}")
-                    print(f"[StudentProfile POST] Profile.photo.name: {profile.photo.name if profile and profile.photo else 'None'}")
                     photo_url = None
                     if profile and getattr(profile, 'photo', None):
                         profile.refresh_from_db()
-                        print(f"[StudentProfile POST] After refresh: {profile.photo.name}")
                         version = int(timezone.now().timestamp())
                         photo_url = f"{request.build_absolute_uri(profile.photo.url)}?v={version}"
-                        print(f"[StudentProfile POST] Photo URL: {photo_url}")
 
                     # Mensagem personalizada se houve cancelamento de aulas
                     message = 'Dados atualizados com sucesso!'
@@ -347,7 +342,9 @@ def edit_profile_view(request):
                         'success': True,
                         'message': message,
                         'photo_url': photo_url,
-                        'cancelled_lessons': cancelled_lessons
+                        'cancelled_lessons': cancelled_lessons,
+                        'full_name': saved_user.full_name,
+                        'username': saved_user.username
                     })
                 else:
                     return JsonResponse({
@@ -357,7 +354,6 @@ def edit_profile_view(request):
                     })
                     
             except Exception as e:
-                print(f"Erro ao salvar perfil: {str(e)}")
                 return JsonResponse({
                     'success': False,
                     'message': f'Erro ao salvar: {str(e)}'
@@ -391,21 +387,18 @@ def edit_profile_view(request):
 
                     # Garante a URL absoluta mais recente da foto para atualizar o avatar do usuário
                     profile = user.get_profile()
-                    print(f"[InstructorProfile POST] Profile after save: {profile}")
-                    print(f"[InstructorProfile POST] Profile.photo: {profile.photo if profile else 'None'}")
-                    print(f"[InstructorProfile POST] Profile.photo.name: {profile.photo.name if profile and profile.photo else 'None'}")
                     photo_url = None
                     if profile and getattr(profile, 'photo', None):
                         profile.refresh_from_db()
-                        print(f"[InstructorProfile POST] After refresh: {profile.photo.name}")
                         version = int(timezone.now().timestamp())
                         photo_url = f"{request.build_absolute_uri(profile.photo.url)}?v={version}"
-                        print(f"[InstructorProfile POST] Photo URL: {photo_url}")
 
                     return JsonResponse({
                         'success': True,
                         'message': 'Dados atualizados com sucesso!',
-                        'photo_url': photo_url
+                        'photo_url': photo_url,
+                        'full_name': user.full_name,
+                        'username': user.username
                     })
                 else:
                     return JsonResponse({
@@ -415,7 +408,6 @@ def edit_profile_view(request):
                     })
                     
             except Exception as e:
-                print(f"Erro ao salvar perfil: {str(e)}")
                 return JsonResponse({
                     'success': False,
                     'message': f'Erro ao salvar: {str(e)}'
@@ -484,7 +476,6 @@ def edit_profile_view(request):
                     })
                     
             except Exception as e:
-                print(f"Erro ao salvar perfil: {str(e)}")
                 return JsonResponse({
                     'success': False,
                     'message': f'Erro ao salvar: {str(e)}'

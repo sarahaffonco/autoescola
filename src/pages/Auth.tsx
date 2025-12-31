@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Car, User, Briefcase, Mail, Lock, Phone, Loader2 } from 'lucide-react';
+import { Car, User, Briefcase, Mail, Lock, Phone, Loader2, ImagePlus } from 'lucide-react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -32,7 +32,9 @@ export default function Auth() {
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPhone, setSignUpPhone] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
-  const [signUpRole, setSignUpRole] = useState<'instrutor' | 'funcionario'>('instrutor');
+  const [signUpRole, setSignUpRole] = useState<'instrutor' | 'funcionario' | 'aluno'>('aluno');
+  const [signUpPhoto, setSignUpPhoto] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -98,15 +100,48 @@ export default function Auth() {
       return;
     }
 
+    // Validação do arquivo de foto
+    if (signUpPhoto) {
+      const allowedExtensions = ['jpg', 'jpeg', 'png'];
+      const fileExtension = signUpPhoto.name.split('.').pop()?.toLowerCase();
+      
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        toast({
+          title: 'Formato de arquivo inválido',
+          description: `Formato .${fileExtension || 'desconhecido'} não é permitido. Use apenas JPG, JPEG ou PNG`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (signUpPhoto.size > 5 * 1024 * 1024) { // 5MB
+        toast({
+          title: 'Arquivo muito grande',
+          description: 'O arquivo deve ter no máximo 5MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
-    const { error } = await signUp(signUpEmail, signUpPassword, signUpName, signUpPhone, signUpRole);
+    const { error } = await signUp(signUpEmail, signUpPassword, signUpName, signUpPhone, signUpRole, signUpPhoto);
     setIsLoading(false);
 
     if (error) {
+      const details = (error as any).details || {};
       let message = error.message;
-      if (error.message.includes('already registered')) {
+      
+      // Se há erros de validação por campo
+      if (Object.keys(details).length > 0) {
+        const errorMessages = Object.entries(details)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join('\n');
+        message = errorMessages;
+      } else if (error.message.includes('already registered')) {
         message = 'Este email já está cadastrado. Tente fazer login.';
       }
+      
       toast({
         title: 'Erro ao cadastrar',
         description: message,
@@ -118,6 +153,13 @@ export default function Auth() {
         description: 'Sua conta foi criada com sucesso.',
       });
       navigate('/');
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSignUpPhoto(file);
     }
   };
 
@@ -264,14 +306,54 @@ export default function Auth() {
                       />
                     </div>
                   </div>
-                  
-                  <div className="space-y-3">
+                                    <div className="space-y-2">
+                    <Label htmlFor="signup-photo">Foto (opcional)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={fileInputRef}
+                        id="signup-photo"
+                        type="file"
+                        accept=".jpg,.jpeg,.png"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <ImagePlus className="mr-2 h-4 w-4" />
+                        {signUpPhoto ? signUpPhoto.name : 'Escolher foto (JPG, PNG)'}
+                      </Button>
+                    </div>
+                    {signUpPhoto && (
+                      <p className="text-xs text-muted-foreground">
+                        Tamanho: {(signUpPhoto.size / 1024).toFixed(0)} KB
+                      </p>
+                    )}
+                  </div>
+                                    <div className="space-y-3">
                     <Label>Tipo de conta</Label>
                     <RadioGroup
                       value={signUpRole}
-                      onValueChange={(value) => setSignUpRole(value as 'instrutor' | 'funcionario')}
-                      className="grid grid-cols-2 gap-4"
+                      onValueChange={(value) => setSignUpRole(value as 'instrutor' | 'funcionario' | 'aluno')}
+                      className="grid grid-cols-3 gap-4"
                     >
+                      <div>
+                        <RadioGroupItem
+                          value="aluno"
+                          id="aluno"
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor="aluno"
+                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <User className="mb-3 h-6 w-6" />
+                          <span className="font-medium">Aluno</span>
+                        </Label>
+                      </div>
                       <div>
                         <RadioGroupItem
                           value="instrutor"

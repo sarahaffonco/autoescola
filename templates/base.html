@@ -120,14 +120,14 @@
                             <img src="{{ profile_photo_url }}" alt="Foto do usuário" class="w-8 h-8 rounded-full object-cover border border-gray-300" onerror="avatarErrorFallback(this)" />
                         {% else %}
                             <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                                <span class="text-sm font-medium text-gray-700">{{ user.full_name|default:user.username|slice:":1"|upper }}</span>
+                                <span class="text-sm font-medium text-gray-700" data-user-initial>{{ user.full_name|default:user.username|slice:":1"|upper }}</span>
                             </div>
                         {% endif %}
                     </button>
                     <div id="userMenu"
                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200">
                         <div class="py-1">
-                            <div class="px-4 py-2 text-sm text-gray-500 border-b">
+                            <div class="px-4 py-2 text-sm text-gray-500 border-b" data-user-display-name>
                                 {{ user.get_role_display }}
                             </div>
                             <!-- Botão para abrir modal de edição -->
@@ -313,6 +313,22 @@
                             // Atualiza avatar e fecha a modal
                             updateNavbarAvatar(finalUrl);
                         }
+                        
+                        // Atualiza o nome exibido no dashboard se retornado
+                        if (data.full_name || data.username) {
+                            const displayName = data.full_name || data.username;
+                            // Atualiza todos os elementos que exibem o nome do usuário
+                            document.querySelectorAll('[data-user-display-name]').forEach(el => {
+                                el.textContent = displayName;
+                            });
+                            // Atualiza o avatar inicial
+                            const initial = displayName.charAt(0).toUpperCase();
+                            document.querySelectorAll('[data-user-initial]').forEach(el => {
+                                el.textContent = initial;
+                                el.setAttribute('data-initial', initial);
+                            });
+                        }
+                        
                         // Fecha a modal após salvar com sucesso
                         closeEditModal();
                     } else {

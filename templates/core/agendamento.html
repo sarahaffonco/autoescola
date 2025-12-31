@@ -63,13 +63,12 @@
                         <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        Tipo de Veículo
+                        Tipo de Veículo <span class="text-gray-500 font-normal text-xs">(opcional)</span>
                     </label>
                     <select name="vehicle_type" 
                             id="id_vehicle_type" 
-                            required
                             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
-                        <option value="">Escolha o tipo</option>
+                        <option value="">Escolha o tipo ou deixe em branco</option>
                         <option value="A">🏍️ Categoria A - Motocicleta</option>
                         <option value="B">🚗 Categoria B - Carro</option>
                     </select>
@@ -197,15 +196,16 @@
 
                     <!-- Instructor Selection -->
                     <div>
-                        <label for="id_instructor" class="block text-sm font-medium text-gray-700 mb-2">Instrutores Disponíveis</label>
+                        <label for="id_instructor" class="block text-sm font-medium text-gray-700 mb-2">
+                            Instrutores Disponíveis <span class="text-gray-500 font-normal">(opcional)</span>
+                        </label>
                         <select name="instructor" 
                                 id="id_instructor" 
-                                required
                                 disabled
                                 class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed">
                             <option value="">Busque um endereço primeiro...</option>
                         </select>
-                        <p class="text-xs text-gray-600 mt-2">Selecione um instrutor próximo a você</p>
+                        <p class="text-xs text-gray-600 mt-2">Você pode deixar sem instrutor e a autoescola alocará um para você</p>
                     </div>
                 </div>
 
@@ -220,7 +220,9 @@
 
                     <!-- Vehicle Selection -->
                     <div class="mb-4">
-                        <label for="id_vehicle" class="block text-sm font-medium text-gray-700 mb-2">Modelo do Veículo</label>
+                        <label for="id_vehicle" class="block text-sm font-medium text-gray-700 mb-2">
+                            Modelo do Veículo <span class="text-gray-500 font-normal">(opcional)</span>
+                        </label>
                         <select name="vehicle"
                                 id="id_vehicle"
                                 disabled
