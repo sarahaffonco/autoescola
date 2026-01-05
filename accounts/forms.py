@@ -399,6 +399,11 @@ class InstructorRegistrationForm(BaseRegistrationForm):
         label='RENAVAM',
         widget=forms.TextInput(attrs={'placeholder': '11 dígitos'})
     )
+    vehicle_last_license_exercise = forms.DateField(
+        required=True,
+        label='Exercício do Último Licenciamento',
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
     vehicle_model = forms.CharField(
         max_length=100,
         required=True,
@@ -447,6 +452,12 @@ class InstructorRegistrationForm(BaseRegistrationForm):
         if len(credential) < 5:
             raise ValidationError('Credencial deve conter pelo menos 5 caracteres')
         return credential
+
+    def clean_vehicle_last_license_exercise(self):
+        last_license_date = self.cleaned_data.get('vehicle_last_license_exercise')
+        if last_license_date and last_license_date > date.today():
+            raise ValidationError('A data do último licenciamento não pode ser futura.')
+        return last_license_date
     
     def clean_cnh_emission_date(self):
         """Valida a data de emissão da CNH"""
@@ -576,6 +587,7 @@ class InstructorRegistrationForm(BaseRegistrationForm):
                 instructor=profile,
                 plate=self.cleaned_data['vehicle_plate'],
                 renavam=self.cleaned_data['vehicle_renavam'],
+                last_license_exercise=self.cleaned_data['vehicle_last_license_exercise'],
                 model=self.cleaned_data['vehicle_model'],
                 make=self.cleaned_data['vehicle_make'],
                 color=self.cleaned_data['vehicle_color'],
