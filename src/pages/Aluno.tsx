@@ -59,7 +59,7 @@ const Aluno = () => {
             </div>
             <div className="flex justify-between mt-2 text-sm text-primary-foreground/80">
               <span>0h</span>
-              <span>20h (mínimo CONTRAN)</span>
+              <span>2h (mínimo CONTRAN)</span>
             </div>
           </div>
         </div>

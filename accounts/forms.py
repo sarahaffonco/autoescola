@@ -260,6 +260,18 @@ class StudentRegistrationForm(BaseRegistrationForm):
             ('AB', 'Ambas as categorias'),
         ]
     )
+
+    # Documentos
+    support_document_1 = forms.FileField(
+        required=True,
+        label='RG digitalizado (frente e verso)',
+        help_text='Envie o RG escaneado ou foto nítida, máx. 10MB'
+    )
+    support_document_2 = forms.FileField(
+        required=False,
+        label='LADV (Licença para Aprendizagem de Direção Veicular)',
+        help_text='Opcional: LADV digitalizada (máx. 10MB)'
+    )
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -281,6 +293,30 @@ class StudentRegistrationForm(BaseRegistrationForm):
                 raise ValidationError(f'Para se cadastrar como aluno, é necessário ter pelo menos {min_age} anos. Você tem {age} anos.')
         
         return birth_date
+
+    def clean_support_document_1(self):
+        document = self.cleaned_data.get('support_document_1')
+        if not document:
+            raise ValidationError('Envie o RG digitalizado (frente e verso).')
+        return self._validate_support_document(document, 'RG digitalizado')
+
+    def clean_support_document_2(self):
+        document = self.cleaned_data.get('support_document_2')
+        if not document:
+            return document
+        return self._validate_support_document(document, 'LADV')
+
+    def _validate_support_document(self, document, field_name):
+        """Validação genérica para documentos de suporte do aluno"""
+        if document:
+            valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx']
+            if not any(document.name.lower().endswith(ext) for ext in valid_extensions):
+                raise ValidationError(f'Apenas arquivos JPG, JPEG, PNG, PDF, DOC e DOCX são permitidos para {field_name}.')
+
+            max_size = 10 * 1024 * 1024  # 10MB
+            if document.size > max_size:
+                raise ValidationError(f'{field_name} deve ter no máximo {max_size // (1024*1024)}MB')
+        return document
     
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -305,6 +341,8 @@ class StudentRegistrationForm(BaseRegistrationForm):
                 address_complement=self.cleaned_data.get('address_complement', ''),
                 gender_identity=self.cleaned_data['gender_identity'],
                 license_categories=self.cleaned_data['license_categories'],
+                support_document_1=self.cleaned_data.get('support_document_1'),
+                support_document_2=self.cleaned_data.get('support_document_2'),
                 # Campos específicos do aluno
                 status='ativo',
                 progress=0,
@@ -375,15 +413,15 @@ class InstructorRegistrationForm(BaseRegistrationForm):
     
     # Documentos de suporte opcionais
     support_document_1 = forms.FileField(
-        required=False,
-        label='Documento de Suporte 1',
-        help_text='Comprovante de residência, etc. (opcional)'
+        required=True,
+        label='Comprovante de Residência',
+        help_text='Conta de luz/água/telefone recente (máximo 10MB)'
     )
     
     support_document_2 = forms.FileField(
         required=False,
-        label='Documento de Suporte 2',
-        help_text='Certificado de curso, etc. (opcional)'
+        label='Credencial de Instrutor (anexo)',
+        help_text='Opcional: credencial do instrutor digitalizada (máximo 10MB)'
     )
 
     # Veículo do instrutor
@@ -519,12 +557,15 @@ class InstructorRegistrationForm(BaseRegistrationForm):
         return year
     
     def clean_support_document_1(self):
-        """Valida documento de suporte 1"""
-        return self._validate_support_document(self.cleaned_data.get('support_document_1'), 'Documento de Suporte 1')
+        """Valida comprovante de residência obrigatório"""
+        document = self.cleaned_data.get('support_document_1')
+        if not document:
+            raise ValidationError('Envie o comprovante de residência.')
+        return self._validate_support_document(document, 'Comprovante de residência')
     
     def clean_support_document_2(self):
         """Valida documento de suporte 2"""
-        return self._validate_support_document(self.cleaned_data.get('support_document_2'), 'Documento de Suporte 2')
+        return self._validate_support_document(self.cleaned_data.get('support_document_2'), 'Credencial do Instrutor')
     
     def _validate_support_document(self, document, field_name):
         """Validação genérica para documentos de suporte"""
