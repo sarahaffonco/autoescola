@@ -450,6 +450,11 @@ class InstructorVehicle(models.Model):
 
     plate = models.CharField(max_length=10, verbose_name="Placa")
     renavam = models.CharField(max_length=11, verbose_name="RENAVAM")
+    last_license_exercise = models.DateField(
+        verbose_name="Exercício do Último Licenciamento",
+        null=True,
+        blank=True,
+    )
     model = models.CharField(max_length=100, verbose_name="Modelo")
     make = models.CharField(max_length=100, verbose_name="Marca")
     color = models.CharField(max_length=50, verbose_name="Cor")
@@ -485,6 +490,10 @@ class InstructorVehicle(models.Model):
             errors['renavam'] = 'RENAVAM deve conter exatamente 11 dígitos.'
         else:
             self.renavam = ren
+
+        # Exercício do último licenciamento não pode ser futuro
+        if self.last_license_exercise and self.last_license_exercise > date.today():
+            errors['last_license_exercise'] = 'A data do último licenciamento não pode ser futura.'
 
         # Ano: razoável entre 1960 e ano atual + 1
         current_year = date.today().year
