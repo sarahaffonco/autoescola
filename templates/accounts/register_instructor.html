@@ -13,7 +13,7 @@
                 </svg>
             </div>
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Cadastro de Instrutor</h1>
-            <p class="text-gray-600 max-w-2xl mx-auto">Visual alinhado ao agendamento, com cartões, ícones e destaques em amarelo.</p>
+
         </div>
 
         <!-- Formulário -->
@@ -204,6 +204,9 @@
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                                    placeholder="Seu nome completo">
+                            {% if form.full_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- CPF -->
@@ -221,6 +224,9 @@
                                 <span>Digite 11 dígitos</span>
                                 <span id="cpfCounter" class="font-medium text-amber-700">(0/11)</span>
                             </div>
+                            {% if form.cpf.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cpf.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- RG -->
@@ -238,6 +244,9 @@
                                 <span>8-12 caracteres</span>
                                 <span id="rgCounter" class="font-medium text-amber-700">(0 caracteres)</span>
                             </div>
+                            {% if form.rg.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.rg.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Telefone -->
@@ -250,6 +259,9 @@
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                                    placeholder="(00) 00000-0000">
+                            {% if form.phone.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Data de Nascimento -->
@@ -261,6 +273,9 @@
                                    id="id_birth_date" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                            {% if form.birth_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.birth_date.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Identidade de Gênero -->
@@ -377,6 +392,9 @@
                                 <span>Digite 8 dígitos</span>
                                 <span id="cepCounter" class="font-medium text-amber-700">(0/8)</span>
                             </div>
+                            {% if form.cep.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cep.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Endereço (auto preenchido) -->
@@ -404,6 +422,9 @@
                                    id="id_address_number" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                            {% if form.address_number.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address_number.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <div>
@@ -413,6 +434,9 @@
                                    value="{{ form.address_complement.value|default:'' }}"
                                    id="id_address_complement"
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                            {% if form.address_complement.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address_complement.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- CEP da Base/Garagem -->
@@ -458,6 +482,9 @@
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                                    placeholder="Digite o número da CNH">
                             <p class="mt-1 text-sm text-gray-600">Mínimo 9 dígitos</p>
+                            {% if form.cnh.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cnh.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Data de Emissão da CNH -->
@@ -468,7 +495,12 @@
                                    value="{{ form.cnh_emission_date.value|default:'' }}"
                                    id="id_cnh_emission_date" 
                                    required
+                                   max="{{ today|date:'Y-m-d' }}"
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                            <p class="mt-1 text-sm text-gray-600">Data não pode ser futura</p>
+                            {% if form.cnh_emission_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cnh_emission_date.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Credencial -->
@@ -482,6 +514,9 @@
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                                    placeholder="Número da credencial">
                             <p class="mt-1 text-sm text-gray-600">Mínimo 5 caracteres</p>
+                            {% if form.credential.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.credential.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Foto 3x4 -->
@@ -494,6 +529,9 @@
                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                    class="w-full px-4 py-3 rounded-lg border-2 border-dashed border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
                             <p class="mt-1 text-sm text-gray-600">Apenas JPG, JPEG ou PNG (máx. 5MB)</p>
+                            {% if form.photo.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.photo.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Documento da CNH -->
@@ -506,6 +544,9 @@
                                    accept="image/*,.pdf"
                                    class="w-full px-4 py-3 rounded-lg border-2 border-dashed border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
                             <p class="mt-1 text-sm text-gray-600">JPG, PNG ou PDF (máx. 10MB)</p>
+                            {% if form.cnh_document.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cnh_document.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Comprovante de residência (obrigatório) -->
@@ -559,6 +600,9 @@
                                    placeholder="ABC1D23 ou AAA-1234"
                                    maxlength="8">
                             <p class="mt-1 text-sm text-gray-600">Formatos aceitos: ABC1D23 ou AAA-1234</p>
+                            {% if form.vehicle_plate.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.vehicle_plate.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- RENAVAM -->
@@ -576,6 +620,9 @@
                                 <span>Digite 11 dígitos</span>
                                 <span id="renavamCounter" class="font-medium text-amber-700">(0/11)</span>
                             </div>
+                            {% if form.vehicle_renavam.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.vehicle_renavam.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Exercício do último licenciamento -->
@@ -586,7 +633,12 @@
                                    id="id_vehicle_last_license_exercise"
                                    value="{{ form.vehicle_last_license_exercise.value|default:'' }}"
                                    required
+                                   max="{{ today|date:'Y-m-d' }}"
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                            <p class="mt-1 text-sm text-gray-600">Data não pode ser futura</p>
+                            {% if form.vehicle_last_license_exercise.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.vehicle_last_license_exercise.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Marca -->
@@ -636,6 +688,9 @@
                                    min="1960"
                                    class="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                                    placeholder="Ex.: 2022">
+                            {% if form.vehicle_year.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.vehicle_year.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Acionamento duplo -->
@@ -826,6 +881,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const cpfInput = document.getElementById('id_cpf');
     if (cpfInput) {
+        let cpfCheckTimeout;
+        
         // Inicializa o contador com o valor atual
         const updateCpfCounter = function() {
             const counter = document.getElementById('cpfCounter');
@@ -856,6 +913,43 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Atualiza contador
             updateCpfCounter();
+            
+            // Verifica duplicata no banco de dados
+            clearTimeout(cpfCheckTimeout);
+            const cpfValue = e.target.value.replace(/\D/g, '');
+            
+            // Remove mensagens anteriores
+            const existingMsg = this.parentNode.querySelector('.cpf-validation-message');
+            if (existingMsg) existingMsg.remove();
+            
+            if (cpfValue.length === 11) {
+                cpfCheckTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/accounts/api/check-cpf/?cpf=${cpfValue}`);
+                        const data = await response.json();
+                        
+                        if (data.exists) {
+                            cpfInput.classList.add('border-red-500');
+                            cpfInput.classList.remove('border-green-500');
+                            
+                            const errorMsg = document.createElement('p');
+                            errorMsg.className = 'mt-1 text-sm text-red-600 cpf-validation-message';
+                            errorMsg.textContent = '✗ Este CPF já está cadastrado no sistema';
+                            cpfInput.parentNode.appendChild(errorMsg);
+                        } else {
+                            cpfInput.classList.remove('border-red-500');
+                            cpfInput.classList.add('border-green-500');
+                            
+                            const successMsg = document.createElement('p');
+                            successMsg.className = 'mt-1 text-sm text-green-600 cpf-validation-message';
+                            successMsg.textContent = '✓ CPF disponível';
+                            cpfInput.parentNode.appendChild(successMsg);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao verificar CPF:', error);
+                    }
+                }, 500);
+            }
         });
     }
     
@@ -864,6 +958,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const rgInput = document.getElementById('id_rg');
     if (rgInput) {
+        let rgCheckTimeout;
+        
         // Inicializa o contador com o valor atual
         const updateRgCounter = function() {
             const counter = document.getElementById('rgCounter');
@@ -916,6 +1012,43 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Atualiza contador
             updateRgCounter();
+            
+            // Verifica duplicata no banco de dados
+            clearTimeout(rgCheckTimeout);
+            const rgValue = e.target.value.replace(/[^A-Za-z0-9.-]/g, '');
+            
+            // Remove mensagens anteriores
+            const existingMsg = this.parentNode.querySelector('.rg-validation-message');
+            if (existingMsg) existingMsg.remove();
+            
+            if (rgValue.length >= 8) {
+                rgCheckTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/accounts/api/check-rg/?rg=${encodeURIComponent(rgValue)}`);
+                        const data = await response.json();
+                        
+                        if (data.exists) {
+                            rgInput.classList.add('border-red-500');
+                            rgInput.classList.remove('border-green-500');
+                            
+                            const errorMsg = document.createElement('p');
+                            errorMsg.className = 'mt-1 text-sm text-red-600 rg-validation-message';
+                            errorMsg.textContent = '✗ Este RG já está cadastrado no sistema';
+                            rgInput.parentNode.appendChild(errorMsg);
+                        } else {
+                            rgInput.classList.remove('border-red-500');
+                            rgInput.classList.add('border-green-500');
+                            
+                            const successMsg = document.createElement('p');
+                            successMsg.className = 'mt-1 text-sm text-green-600 rg-validation-message';
+                            successMsg.textContent = '✓ RG disponível';
+                            rgInput.parentNode.appendChild(successMsg);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao verificar RG:', error);
+                    }
+                }, 500);
+            }
         });
     }
     
@@ -952,6 +1085,17 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Atualiza contador
             updateCepCounter();
+
+            // Mensagem de sucesso para CEP
+            const existingCepMsg = cepInput.parentNode.querySelector('.cep-validation-message');
+            if (existingCepMsg) existingCepMsg.remove();
+            const digitsNow = cepInput.value.replace(/\D/g, '');
+            if (digitsNow.length === 8) {
+                const successMsg = document.createElement('p');
+                successMsg.className = 'mt-1 text-sm text-green-600 cep-validation-message';
+                successMsg.textContent = '✓ CEP válido';
+                cepInput.parentNode.appendChild(successMsg);
+            }
         });
         
         // Busca automática de CEP
@@ -1015,6 +1159,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 e.target.value = value.replace(/(\d{2})(\d{5})(\d)/, '($1) $2-$3');
+            }
+
+            // Mensagem de sucesso para Telefone
+            const existingPhoneMsg = phoneInput.parentNode.querySelector('.phone-validation-message');
+            if (existingPhoneMsg) existingPhoneMsg.remove();
+            const phoneDigitsNow = e.target.value.replace(/\D/g, '');
+            if (phoneDigitsNow.length >= 10) {
+                const successMsg = document.createElement('p');
+                successMsg.className = 'mt-1 text-sm text-green-600 phone-validation-message';
+                successMsg.textContent = '✓ Telefone válido';
+                phoneInput.parentNode.appendChild(successMsg);
             }
         });
     }
@@ -1098,132 +1253,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('instructorForm');
     if (form) {
         form.addEventListener('submit', function(e) {
-            let isValid = true;
-            
-            // Valida CPF
+            // Valida CPF (apenas duplicado)
             if (cpfInput) {
-                const cpfDigits = cpfInput.value.replace(/\D/g, '');
-                if (cpfDigits.length !== 11) {
-                    cpfInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    cpfInput.classList.remove('border-red-500');
+                const hasDuplicateError = cpfInput.classList.contains('border-red-500');
+                if (hasDuplicateError) {
+                    e.preventDefault();
+                    cpfInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    cpfInput.focus();
+                    return false;
                 }
             }
             
-            // Valida RG
+            // Valida RG (apenas duplicado)
             if (rgInput) {
-                const rgAlphanum = rgInput.value.replace(/[^A-Za-z0-9]/g, '');
-                if (rgAlphanum.length < 8 || rgAlphanum.length > 12) {
-                    rgInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    rgInput.classList.remove('border-red-500');
+                const hasDuplicateError = rgInput.classList.contains('border-red-500');
+                if (hasDuplicateError) {
+                    e.preventDefault();
+                    rgInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    rgInput.focus();
+                    return false;
                 }
             }
             
-            // Valida CEP
-            if (cepInput) {
-                const cepDigits = cepInput.value.replace(/\D/g, '');
-                if (cepDigits.length !== 8) {
-                    cepInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    cepInput.classList.remove('border-red-500');
-                }
-            }
-            
-            // Valida Telefone
-            if (phoneInput) {
-                const phoneDigits = phoneInput.value.replace(/\D/g, '');
-                if (phoneDigits.length < 10) {
-                    phoneInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    phoneInput.classList.remove('border-red-500');
-                }
-            }
-            
-            // Valida CNH
-            if (cnhInput) {
-                const cnhDigits = cnhInput.value.replace(/\D/g, '');
-                if (cnhDigits.length < 9) {
-                    cnhInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    cnhInput.classList.remove('border-red-500');
-                }
-            }
-            
-            // Valida Credencial
-            if (credentialInput) {
-                const credentialAlphanum = credentialInput.value.replace(/[^A-Za-z0-9]/g, '');
-                if (credentialAlphanum.length < 5) {
-                    credentialInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    credentialInput.classList.remove('border-red-500');
-                }
-            }
-            
-            // Valida Termos
-            const termsCheckbox = document.getElementById('id_terms');
-            if (termsCheckbox && !termsCheckbox.checked) {
-                const termsLabel = termsCheckbox.nextElementSibling;
-                if (termsLabel) {
-                    termsLabel.classList.add('text-red-600');
-                }
-                isValid = false;
-            }
-            
-            // Valida Placa
-            if (plateInput) {
-                const plate = plateInput.value.toUpperCase();
-                const old = /^[A-Z]{3}-?\d{4}$/;
-                const merc = /^[A-Z]{3}-?[0-9][A-Z][0-9]{2}$/;
-                if (!(old.test(plate) || merc.test(plate))) {
-                    plateInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    plateInput.classList.remove('border-red-500');
-                }
-            }
-
-            // Valida RENAVAM
-            if (renavamInput) {
-                const digits = renavamInput.value.replace(/\D/g, '');
-                if (digits.length !== 11) {
-                    renavamInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    renavamInput.classList.remove('border-red-500');
-                }
-            }
-
-            // Valida Ano
-            if (yearInput) {
-                const y = parseInt(yearInput.value, 10);
-                const now = new Date().getFullYear();
-                if (!y || y < 1960 || y > (now + 1)) {
-                    yearInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    yearInput.classList.remove('border-red-500');
-                }
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-                
-                // Rola para o primeiro erro
-                const firstError = document.querySelector('.border-red-500, .text-red-600');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    firstError.focus();
-                }
-                
-                alert('Por favor, corrija os campos destacados em vermelho.');
-            }
+            // Permite o formulário ser enviado para validação do backend
+            // O servidor validará todos os campos e retornará erros se necessário
         });
         
         // Remove validação ao digitar
@@ -1242,14 +1295,13 @@ document.addEventListener('DOMContentLoaded', function() {
             termsCheckbox.addEventListener('change', function() {
                 const termsLabel = this.nextElementSibling;
                 if (termsLabel) {
- termsLabel.classList.remove('text-red-600');
+                    termsLabel.classList.remove('text-red-600');
                 }
             });
         }
     }
-    
-});
-// ============================================
+
+    // ============================================
     // 5. VALIDAÇÃO DE IDADE MÍNIMA (18 anos)
     // ============================================
     const birthDateInput = document.getElementById('id_birth_date');
@@ -1273,6 +1325,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Remove mensagem de erro se existir
                     const errorMsg = this.parentNode.querySelector('.age-error');
                     if (errorMsg) errorMsg.remove();
+
+                    // Adiciona mensagem de sucesso
+                    const existingSuccess = this.parentNode.querySelector('.age-success');
+                    if (existingSuccess) existingSuccess.remove();
+                    const successMsg = document.createElement('p');
+                    successMsg.className = 'mt-1 text-sm text-green-600 age-success';
+                    successMsg.textContent = '✓ Idade válida (18+)';
+                    this.parentNode.appendChild(successMsg);
                 } else {
                     this.classList.remove('border-green-500');
                     this.classList.add('border-red-500');
@@ -1285,10 +1345,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.parentNode.appendChild(errorMsg);
                     }
                     errorMsg.textContent = `Idade mínima de 18 anos. Você tem ${actualAge} anos.`;
+
+                    // Remove mensagem de sucesso se existir
+                    const existingSuccess = this.parentNode.querySelector('.age-success');
+                    if (existingSuccess) existingSuccess.remove();
                 }
             }
         });
     }
     
+});
 </script>
 {% endblock %}

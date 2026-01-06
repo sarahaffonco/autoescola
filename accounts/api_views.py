@@ -379,3 +379,69 @@ def logout_api(request):
         'success': True,
         'message': 'Logout realizado com sucesso!'
     })
+
+
+@csrf_exempt
+@csrf_exempt
+def check_cpf_api(request):
+    """API para verificar se CPF já está cadastrado"""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    cpf = request.GET.get('cpf', '').strip()
+    
+    if not cpf:
+        return JsonResponse({'error': 'CPF não fornecido'}, status=400)
+    
+    # Remove caracteres não numéricos
+    cpf_numeros = ''.join(filter(str.isdigit, cpf))
+    
+    # Formata para o padrão 000.000.000-00
+    if len(cpf_numeros) == 11:
+        cpf_formatado = f"{cpf_numeros[:3]}.{cpf_numeros[3:6]}.{cpf_numeros[6:9]}-{cpf_numeros[9:]}"
+    else:
+        cpf_formatado = cpf
+    
+    # Verifica se existe em algum perfil
+    from .models import StudentProfile, InstructorProfile, EmployeeProfile
+    
+    exists = (
+        StudentProfile.objects.filter(cpf=cpf_formatado).exists() or
+        InstructorProfile.objects.filter(cpf=cpf_formatado).exists() or
+        EmployeeProfile.objects.filter(cpf=cpf_formatado).exists()
+    )
+    
+    return JsonResponse({
+        'exists': exists,
+        'message': 'CPF já cadastrado' if exists else 'CPF disponível'
+    })
+
+
+@csrf_exempt
+def check_rg_api(request):
+    """API para verificar se RG já está cadastrado"""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    rg = request.GET.get('rg', '').strip()
+    
+    if not rg:
+        return JsonResponse({'error': 'RG não fornecido'}, status=400)
+    
+    # Remove caracteres indesejados, mantendo apenas letras, números, pontos e hífens
+    import re
+    rg_limpo = re.sub(r'[^A-Za-z0-9.-]', '', rg)
+    
+    # Verifica se existe em algum perfil
+    from .models import StudentProfile, InstructorProfile, EmployeeProfile
+    
+    exists = (
+        StudentProfile.objects.filter(rg=rg_limpo).exists() or
+        InstructorProfile.objects.filter(rg=rg_limpo).exists() or
+        EmployeeProfile.objects.filter(rg=rg_limpo).exists()
+    )
+    
+    return JsonResponse({
+        'exists': exists,
+        'message': 'RG já cadastrado' if exists else 'RG disponível'
+    })

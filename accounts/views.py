@@ -100,20 +100,45 @@ def register_instructor_view(request):
     if request.user.is_authenticated:
         return redirect('instrutor_dashboard')
     
+    # Data de hoje para limitar campos de data
+    from datetime import date
+    today = date.today()
+    
     if request.method == 'POST':
+        print("\n=== DEBUG: Iniciando registro de instrutor ===")
+        print(f"POST data: {request.POST.keys()}")
+        print(f"FILES data: {request.FILES.keys()}")
+        
         form = InstructorRegistrationForm(request.POST, request.FILES)
+        print(f"Form criado, validando...")
+        
         if form.is_valid():
+            print(f"Form válido! cleaned_data: {form.cleaned_data.keys()}")
             try:
+                print("Chamando form.save()...")
                 user = form.save()
+                print(f"Usuário criado: {user.username} (ID: {user.id})")
                 login(request, user)
                 messages.success(request, 'Conta de instrutor criada com sucesso! Aguarde aprovação.')
                 return redirect('instrutor_dashboard')
             except Exception as e:
+                import traceback
+                print(f'\n!!! ERRO AO CADASTRAR INSTRUTOR: {str(e)} !!!')
+                print(f'Tipo do erro: {type(e).__name__}')
+                traceback.print_exc()
                 messages.error(request, f'Erro ao criar conta: {str(e)}')
+                # Retorna o formulário com os dados para reedição
+                return render(request, 'accounts/register_instructor.html', {'form': form, 'today': today})
+        else:
+            # Formulário com erros de validação
+            print(f"Form INVÁLIDO! Erros: {form.errors}")
+            for field, errors in form.errors.items():
+                print(f"  - {field}: {errors}")
+            return render(request, 'accounts/register_instructor.html', {'form': form, 'today': today})
     else:
         form = InstructorRegistrationForm()
     
-    return render(request, 'accounts/register_instructor.html', {'form': form})
+    return render(request, 'accounts/register_instructor.html', {'form': form, 'today': today})
 
 
 def register_employee_view(request):

@@ -158,6 +158,7 @@
                             </label>
                             <input type="text" 
                                    name="full_name" 
+                                   value="{{ form.full_name.value|default:'' }}"
                                    id="id_full_name" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
@@ -171,6 +172,7 @@
                             </label>
                             <input type="text" 
                                    name="cpf" 
+                                   value="{{ form.cpf.value|default:'' }}"
                                    id="id_cpf" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
@@ -180,6 +182,9 @@
                                 <span class="text-sm text-gray-500">Digite 11 dígitos</span>
                                 <span id="cpfCounter" class="text-sm text-gray-500">(0/11)</span>
                             </div>
+                            {% if form.cpf.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cpf.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- RG -->
@@ -189,6 +194,7 @@
                             </label>
                             <input type="text" 
                                    name="rg" 
+                                   value="{{ form.rg.value|default:'' }}"
                                    id="id_rg" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
@@ -198,6 +204,9 @@
                                 <span class="text-sm text-gray-500">8-12 caracteres</span>
                                 <span id="rgCounter" class="text-sm text-gray-500">(0 caracteres)</span>
                             </div>
+                            {% if form.rg.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.rg.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Telefone -->
@@ -207,10 +216,14 @@
                             </label>
                             <input type="tel" 
                                    name="phone" 
+                                   value="{{ form.phone.value|default:'' }}"
                                    id="id_phone" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                                    placeholder="(00) 00000-0000">
+                            {% if form.phone.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Data de Nascimento -->
@@ -220,9 +233,13 @@
                             </label>
                             <input type="date" 
                                    name="birth_date" 
+                                   value="{{ form.birth_date.value|default:'' }}"
                                    id="id_birth_date" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                            {% if form.birth_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.birth_date.errors.0 }}</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -247,6 +264,7 @@
                             </label>
                             <input type="text" 
                                    name="cep" 
+                                   value="{{ form.cep.value|default:'' }}"
                                    id="id_cep" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
@@ -256,6 +274,9 @@
                                 <span class="text-sm text-gray-500">Digite 8 dígitos</span>
                                 <span id="cepCounter" class="text-sm text-gray-500">(0/8)</span>
                             </div>
+                            {% if form.cep.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cep.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Endereço (auto preenchido) -->
@@ -265,11 +286,15 @@
                             </label>
                             <input type="text" 
                                    name="address" 
+                                   value="{{ form.address.value|default:'' }}"
                                    id="id_address" 
                                    required
                                    readonly
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 cursor-not-allowed transition-all">
                             <p class="mt-1 text-sm text-gray-500">Preenchido automaticamente</p>
+                            {% if form.address.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <!-- Número e Complemento -->
@@ -279,9 +304,13 @@
                             </label>
                             <input type="text" 
                                    name="address_number" 
+                                   value="{{ form.address_number.value|default:'' }}"
                                    id="id_address_number" 
                                    required
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                            {% if form.address_number.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address_number.errors.0 }}</p>
+                            {% endif %}
                         </div>
 
                         <div>
@@ -290,8 +319,12 @@
                             </label>
                             <input type="text" 
                                    name="address_complement" 
+                                   value="{{ form.address_complement.value|default:'' }}"
                                    id="id_address_complement"
                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                            {% if form.address_complement.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address_complement.errors.0 }}</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -530,6 +563,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const cpfInput = document.getElementById('id_cpf');
     if (cpfInput) {
+        let cpfCheckTimeout;
+        
         cpfInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 11) value = value.substring(0, 11);
@@ -552,6 +587,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 counter.textContent = `(${digits.length}/11)`;
                 counter.className = `text-sm ${digits.length === 11 ? 'text-green-600' : 'text-red-600'}`;
             }
+            
+            // Verifica duplicata no banco de dados
+            clearTimeout(cpfCheckTimeout);
+            const cpfValue = e.target.value.replace(/\D/g, '');
+            
+            // Remove mensagens anteriores
+            const existingMsg = this.parentNode.querySelector('.cpf-validation-message');
+            if (existingMsg) existingMsg.remove();
+            
+            if (cpfValue.length === 11) {
+                cpfCheckTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/accounts/api/check-cpf/?cpf=${cpfValue}`);
+                        const data = await response.json();
+                        
+                        if (data.exists) {
+                            cpfInput.classList.add('border-red-500');
+                            cpfInput.classList.remove('border-green-500');
+                            
+                            const errorMsg = document.createElement('p');
+                            errorMsg.className = 'mt-1 text-sm text-red-600 cpf-validation-message';
+                            errorMsg.textContent = '✗ Este CPF já está cadastrado no sistema';
+                            cpfInput.parentNode.appendChild(errorMsg);
+                        } else {
+                            cpfInput.classList.remove('border-red-500');
+                            cpfInput.classList.add('border-green-500');
+                            
+                            const successMsg = document.createElement('p');
+                            successMsg.className = 'mt-1 text-sm text-green-600 cpf-validation-message';
+                            successMsg.textContent = '✓ CPF disponível';
+                            cpfInput.parentNode.appendChild(successMsg);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao verificar CPF:', error);
+                    }
+                }, 500);
+            }
         });
     }
     
@@ -560,6 +632,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const rgInput = document.getElementById('id_rg');
     if (rgInput) {
+        let rgCheckTimeout;
+        
         rgInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/[^A-Za-z0-9.-]/g, '');
             if (value.length > 20) value = value.substring(0, 20);
@@ -604,6 +678,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 counter.textContent = `(${alphanum.length} caracteres)`;
                 counter.className = `text-sm ${alphanum.length >= 8 && alphanum.length <= 12 ? 'text-green-600' : 'text-red-600'}`;
             }
+            
+            // Verifica duplicata no banco de dados
+            clearTimeout(rgCheckTimeout);
+            const rgValue = e.target.value.replace(/[^A-Za-z0-9.-]/g, '');
+            
+            // Remove mensagens anteriores
+            const existingMsg = this.parentNode.querySelector('.rg-validation-message');
+            if (existingMsg) existingMsg.remove();
+            
+            if (rgValue.length >= 8) {
+                rgCheckTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/accounts/api/check-rg/?rg=${encodeURIComponent(rgValue)}`);
+                        const data = await response.json();
+                        
+                        if (data.exists) {
+                            rgInput.classList.add('border-red-500');
+                            rgInput.classList.remove('border-green-500');
+                            
+                            const errorMsg = document.createElement('p');
+                            errorMsg.className = 'mt-1 text-sm text-red-600 rg-validation-message';
+                            errorMsg.textContent = '✗ Este RG já está cadastrado no sistema';
+                            rgInput.parentNode.appendChild(errorMsg);
+                        } else {
+                            rgInput.classList.remove('border-red-500');
+                            rgInput.classList.add('border-green-500');
+                            
+                            const successMsg = document.createElement('p');
+                            successMsg.className = 'mt-1 text-sm text-green-600 rg-validation-message';
+                            successMsg.textContent = '✓ RG disponível';
+                            rgInput.parentNode.appendChild(successMsg);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao verificar RG:', error);
+                    }
+                }, 500);
+            }
         });
     }
     
@@ -630,6 +741,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const digits = e.target.value.replace(/\D/g, '');
                 counter.textContent = `(${digits.length}/8)`;
                 counter.className = `text-sm ${digits.length === 8 ? 'text-green-600' : 'text-red-600'}`;
+            }
+
+            // Mensagem de sucesso para CEP
+            const existingCepMsg = cepInput.parentNode.querySelector('.cep-validation-message');
+            if (existingCepMsg) existingCepMsg.remove();
+            const digitsNow = e.target.value.replace(/\D/g, '');
+            if (digitsNow.length === 8) {
+                const successMsg = document.createElement('p');
+                successMsg.className = 'mt-1 text-sm text-green-600 cep-validation-message';
+                successMsg.textContent = '✓ CEP válido';
+                cepInput.parentNode.appendChild(successMsg);
             }
         });
         
@@ -702,6 +824,17 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 e.target.value = value.replace(/(\d{2})(\d{5})(\d)/, '($1) $2-$3');
             }
+
+            // Mensagem de sucesso para Telefone
+            const existingPhoneMsg = phoneInput.parentNode.querySelector('.phone-validation-message');
+            if (existingPhoneMsg) existingPhoneMsg.remove();
+            const phoneDigitsNow = e.target.value.replace(/\D/g, '');
+            if (phoneDigitsNow.length >= 10) {
+                const successMsg = document.createElement('p');
+                successMsg.className = 'mt-1 text-sm text-green-600 phone-validation-message';
+                successMsg.textContent = '✓ Telefone válido';
+                phoneInput.parentNode.appendChild(successMsg);
+            }
         });
     }
     
@@ -713,28 +846,38 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             let isValid = true;
             
-            // Valida CPF
-            if (cpfInput) {
-                const cpfDigits = cpfInput.value.replace(/\D/g, '');
-                if (cpfDigits.length !== 11) {
-                    cpfInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    cpfInput.classList.remove('border-red-500');
-                }
-            }
             
-            // Valida RG
-            if (rgInput) {
-                const rgAlphanum = rgInput.value.replace(/[^A-Za-z0-9]/g, '');
-                if (rgAlphanum.length < 8 || rgAlphanum.length > 12) {
-                    rgInput.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    rgInput.classList.remove('border-red-500');
-                }
-            }
+                        // Valida CPF (tamanho e se está duplicado)
+                        if (cpfInput) {
+                            const cpfDigits = cpfInput.value.replace(/\D/g, '');
+                            const hasDuplicateError = cpfInput.classList.contains('border-red-500');
+                
+                            if (cpfDigits.length !== 11) {
+                                cpfInput.classList.add('border-red-500');
+                                isValid = false;
+                            } else if (hasDuplicateError) {
+                                // Se tem borda vermelha, significa que foi detectado duplicado
+                                isValid = false;
+                            } else {
+                                cpfInput.classList.remove('border-red-500');
+                            }
+                        }
             
+                        // Valida RG (tamanho e se está duplicado)
+                        if (rgInput) {
+                            const rgAlphanum = rgInput.value.replace(/[^A-Za-z0-9]/g, '');
+                            const hasDuplicateError = rgInput.classList.contains('border-red-500');
+                
+                            if (rgAlphanum.length < 8 || rgAlphanum.length > 20) {
+                                rgInput.classList.add('border-red-500');
+                                isValid = false;
+                            } else if (hasDuplicateError) {
+                                // Se tem borda vermelha, significa que foi detectado duplicado
+                                isValid = false;
+                            } else {
+                                rgInput.classList.remove('border-red-500');
+                            }
+                        }
             // Valida CEP
             if (cepInput) {
                 const cepDigits = cepInput.value.replace(/\D/g, '');

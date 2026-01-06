@@ -19,6 +19,8 @@ urlpatterns = [
     path('api/login/', api_views.login_api, name='api_login'),
     path('api/me/', api_views.me_api, name='api_me'),
     path('api/logout/', api_views.logout_api, name='api_logout'),
+    path('api/check-cpf/', api_views.check_cpf_api, name='api_check_cpf'),
+    path('api/check-rg/', api_views.check_rg_api, name='api_check_rg'),
     
     # Dashboards
     path('dashboard/aluno/', views.aluno_dashboard, name='aluno_dashboard'),

@@ -149,6 +149,12 @@ class BaseRegistrationForm(UserCreationForm):
         if len(rg_limpo) < 8 or len(rg_limpo) > 20:
             raise ValidationError('RG deve ter entre 8 e 20 caracteres válidos')
         
+        # Verifica se já existe no banco de dados
+        if (StudentProfile.objects.filter(rg=rg_limpo).exists() or
+            InstructorProfile.objects.filter(rg=rg_limpo).exists() or
+            EmployeeProfile.objects.filter(rg=rg_limpo).exists()):
+            raise ValidationError('Este RG já está cadastrado no sistema')
+        
         return rg_limpo
     
     def clean_cep(self):
@@ -559,21 +565,44 @@ class InstructorRegistrationForm(BaseRegistrationForm):
     def clean_support_document_1(self):
         """Valida comprovante de residência obrigatório"""
         document = self.cleaned_data.get('support_document_1')
+        print(f"\n=== DEBUG clean_support_document_1 ===")
+        print(f"Document: {document}")
+        if document:
+            print(f"Nome do arquivo: '{document.name}'")
+            print(f"Tamanho: {document.size} bytes")
+            print(f"Content type: {getattr(document, 'content_type', 'N/A')}")
         if not document:
             raise ValidationError('Envie o comprovante de residência.')
         return self._validate_support_document(document, 'Comprovante de residência')
     
     def clean_support_document_2(self):
         """Valida documento de suporte 2"""
-        return self._validate_support_document(self.cleaned_data.get('support_document_2'), 'Credencial do Instrutor')
+        document = self.cleaned_data.get('support_document_2')
+        if document:
+            print(f"\n=== DEBUG clean_support_document_2 ===")
+            print(f"Nome do arquivo: '{document.name}'")
+        return self._validate_support_document(document, 'Credencial do Instrutor')
     
     def _validate_support_document(self, document, field_name):
         """Validação genérica para documentos de suporte"""
         if document:
-            # Validação do tipo de arquivo
-            valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx']
-            if not any(document.name.lower().endswith(ext) for ext in valid_extensions):
-                raise ValidationError(f'Apenas arquivos JPG, JPEG, PNG, PDF, DOC e DOCX são permitidos para {field_name}.')
+            print(f"\n=== DEBUG _validate_support_document para {field_name} ===")
+            print(f"Nome original: '{document.name}'")
+            print(f"Nome lower: '{document.name.lower()}'")
+            
+            # Validação do tipo de arquivo - aceita mais extensões comuns
+            valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.heic', '.webp']
+            file_name_lower = document.name.lower()
+            
+            # Remove espaços e caracteres especiais que podem causar problemas
+            is_valid = any(file_name_lower.endswith(ext) for ext in valid_extensions)
+            
+            print(f"Extensões válidas: {valid_extensions}")
+            print(f"É válido? {is_valid}")
+            
+            if not is_valid:
+                print(f"REJEIÇÃO: arquivo '{document.name}' não tem extensão válida")
+                raise ValidationError(f'Apenas arquivos JPG, JPEG, PNG, PDF, DOC, DOCX, HEIC e WEBP são permitidos para {field_name}.')
             
             # Validação do tamanho do arquivo
             max_size = 10 * 1024 * 1024  # 10MB
@@ -583,59 +612,84 @@ class InstructorRegistrationForm(BaseRegistrationForm):
         return document
     
     def save(self, commit=True):
+        print("\n=== DEBUG InstructorRegistrationForm.save() ===")
         user = super().save(commit=False)
         user.role = 'instrutor'
+        print(f"Usuário preparado: {user.username}")
         
         if commit:
-            user.save()
-            
-            # Cria o perfil do instrutor
-            profile = InstructorProfile.objects.create(
-                user=user,
-                full_name=self.cleaned_data['full_name'],
-                email=self.cleaned_data['email'],
-                phone=self.cleaned_data['phone'],
-                birth_date=self.cleaned_data['birth_date'],
-                photo=self.cleaned_data['photo'],
-                cpf=self.cleaned_data['cpf'],
-                rg=self.cleaned_data['rg'],
-                cep=self.cleaned_data['cep'],
-                address=self.cleaned_data['address'],
-                address_number=self.cleaned_data['address_number'],
-                address_complement=self.cleaned_data.get('address_complement', ''),
-                # Campos específicos do instrutor
-                cnh=self.cleaned_data['cnh'],
-                cnh_emission_date=self.cleaned_data['cnh_emission_date'],
-                cnh_document=self.cleaned_data['cnh_document'],
-                credential=self.cleaned_data['credential'],
-                support_document_1=self.cleaned_data.get('support_document_1'),
-                support_document_2=self.cleaned_data.get('support_document_2'),
-                gender_identity=self.cleaned_data['gender_identity'],
-                cep_base=self.cleaned_data.get('cep_base', ''),
-                vehicle_categories=self.cleaned_data['vehicle_categories'],
-                status='pendente',  # Aguarda aprovação
-                rating=0.0,
-                total_students=0,
-                total_lessons=0
-            )
+            try:
+                print("Salvando usuário...")
+                user.save()
+                print(f"Usuário salvo com ID: {user.pk}")
+                
+                # Cria o perfil do instrutor
+                print("Criando perfil do instrutor...")
+                print(f"Dados: full_name={self.cleaned_data.get('full_name')}, cpf={self.cleaned_data.get('cpf')}")
+                
+                profile = InstructorProfile.objects.create(
+                    user=user,
+                    full_name=self.cleaned_data['full_name'],
+                    email=self.cleaned_data['email'],
+                    phone=self.cleaned_data['phone'],
+                    birth_date=self.cleaned_data['birth_date'],
+                    photo=self.cleaned_data.get('photo'),
+                    cpf=self.cleaned_data['cpf'],
+                    rg=self.cleaned_data['rg'],
+                    cep=self.cleaned_data['cep'],
+                    address=self.cleaned_data['address'],
+                    address_number=self.cleaned_data['address_number'],
+                    address_complement=self.cleaned_data.get('address_complement', ''),
+                    # Campos específicos do instrutor
+                    cnh=self.cleaned_data['cnh'],
+                    cnh_emission_date=self.cleaned_data['cnh_emission_date'],
+                    cnh_document=self.cleaned_data.get('cnh_document'),
+                    credential=self.cleaned_data['credential'],
+                    support_document_1=self.cleaned_data.get('support_document_1'),
+                    support_document_2=self.cleaned_data.get('support_document_2'),
+                    gender_identity=self.cleaned_data['gender_identity'],
+                    cep_base=self.cleaned_data.get('cep_base', ''),
+                    vehicle_categories=self.cleaned_data['vehicle_categories'],
+                    status='pendente',  # Aguarda aprovação
+                    rating=0.0,
+                    total_students=0,
+                    total_lessons=0
+                )
+                print(f"Perfil criado com ID: {profile.pk}")
 
-            # Mapeia identidade para gênero binário usado nos filtros
-            profile.set_gender_from_identity()
-            profile.save(update_fields=['gender'])
+                # Mapeia identidade para gênero binário usado nos filtros
+                print("Mapeando gênero...")
+                profile.set_gender_from_identity()
+                profile.save(update_fields=['gender'])
+                print(f"Gênero mapeado: {profile.gender}")
 
-            # Cria o veículo associado
-            InstructorVehicle.objects.create(
-                instructor=profile,
-                plate=self.cleaned_data['vehicle_plate'],
-                renavam=self.cleaned_data['vehicle_renavam'],
-                last_license_exercise=self.cleaned_data['vehicle_last_license_exercise'],
-                model=self.cleaned_data['vehicle_model'],
-                make=self.cleaned_data['vehicle_make'],
-                color=self.cleaned_data['vehicle_color'],
-                year=self.cleaned_data['vehicle_year'],
-                dual_control=self.cleaned_data.get('vehicle_dual_control', False),
-                adapted_pcd=self.cleaned_data.get('vehicle_adapted_pcd', False),
-            )
+                # Cria o veículo associado
+                print("Criando veículo...")
+                # InstructorVehicle já está importado no topo do arquivo
+                vehicle = InstructorVehicle.objects.create(
+                    instructor=profile,
+                    plate=self.cleaned_data['vehicle_plate'],
+                    renavam=self.cleaned_data['vehicle_renavam'],
+                    last_license_exercise=self.cleaned_data['vehicle_last_license_exercise'],
+                    model=self.cleaned_data['vehicle_model'],
+                    make=self.cleaned_data['vehicle_make'],
+                    color=self.cleaned_data['vehicle_color'],
+                    year=self.cleaned_data['vehicle_year'],
+                    dual_control=self.cleaned_data.get('vehicle_dual_control', False),
+                    adapted_pcd=self.cleaned_data.get('vehicle_adapted_pcd', False),
+                )
+                print(f"Veículo criado com ID: {vehicle.pk}")
+                print("=== FIM save() - SUCESSO ===\n")
+                
+            except Exception as e:
+                # Se algo falhar, deleta o usuário criado
+                print(f"\n!!! ERRO no save(): {e} !!!")
+                import traceback
+                traceback.print_exc()
+                if user.pk:
+                    print(f"Deletando usuário {user.pk}...")
+                    user.delete()
+                raise
         
         return user
 
