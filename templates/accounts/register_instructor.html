@@ -484,23 +484,26 @@
                             <p class="mt-1 text-sm text-gray-600">JPG, PNG ou PDF (máx. 10MB)</p>
                         </div>
 
-                        <!-- Documentos de Suporte -->
+                        <!-- Comprovante de residência (obrigatório) -->
                         <div>
-                            <label for="id_support_document_1" class="block text-sm font-medium text-gray-700 mb-2">Documento de Suporte 1</label>
+                            <label for="id_support_document_1" class="block text-sm font-medium text-gray-700 mb-2">Comprovante de Residência *</label>
                             <input type="file" 
                                    name="support_document_1" 
                                    id="id_support_document_1"
                                    accept="image/*,.pdf,.doc,.docx"
+                                   required
                                    class="w-full px-4 py-3 rounded-lg border-2 border-dashed border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                            <p class="mt-1 text-sm text-gray-600">Obrigatório: conta de luz/água/telefone recente (máx. 10MB)</p>
                         </div>
 
                         <div>
-                            <label for="id_support_document_2" class="block text-sm font-medium text-gray-700 mb-2">Documento de Suporte 2</label>
+                            <label for="id_support_document_2" class="block text-sm font-medium text-gray-700 mb-2">Credencial do Instrutor (anexo)</label>
                             <input type="file" 
                                    name="support_document_2" 
                                    id="id_support_document_2"
                                    accept="image/*,.pdf,.doc,.docx"
                                    class="w-full px-4 py-3 rounded-lg border-2 border-dashed border-amber-200 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all">
+                            <p class="mt-1 text-sm text-gray-600">Opcional: credencial digitalizada (máx. 10MB).</p>
                         </div>
                     </div>
                 </div>
