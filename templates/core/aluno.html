@@ -19,42 +19,14 @@
             <p class="text-gray-600">
                 Acompanhe seu progresso e próximas aulas
             </p>
-            <div class="mt-4 flex flex-wrap gap-3">
-                <a href="{% url 'agendamento' %}"
-                   class="inline-flex items-center gap-2 px-4 py-2 gradient-primary text-white font-medium rounded-lg shadow-card hover:opacity-90 transition-all">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Agendar aula
-                </a>
-                <a href="{% url 'agendamento' %}" class="hidden"></a>
-            </div>
         </div>
 
         <!-- Progress Banner -->
         <div class="mb-8 rounded-2xl gradient-hero p-6 text-white">
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-xl font-bold mb-1">
-                        Progresso para CNH - Categoria 
-                        {% if profile.license_categories == 'A' %}
-                            A 🏍️
-                        {% elif profile.license_categories == 'B' %}
-                            B 🚗
-                        {% elif profile.license_categories == 'AB' %}
-                            A e B 🏍️🚗
-                        {% else %}
-                            B 🚗
-                        {% endif %}
-                    </h2>
+                    <h2 class="text-xl font-bold mb-1">Progresso para CNH - Categoria B</h2>
                     <p class="text-white/80">
-                        {% if profile.license_categories == 'A' %}
-                            Motocicleta
-                        {% elif profile.license_categories == 'B' %}
-                            Automóvel
-                        {% elif profile.license_categories == 'AB' %}
-                            Motocicleta e Automóvel
-                        {% endif %}
                     </p>
                 </div>
                 <div class="flex items-center gap-4">
@@ -70,7 +42,7 @@
                 </div>
                 <div class="flex justify-between mt-2 text-sm text-white/80">
                     <span>0h</span>
-                    <span>2h (mínimo CONTRAN)</span>
+                    <span>20h (mínimo CONTRAN)</span>
                 </div>
             </div>
         </div>
@@ -94,7 +66,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100">
                         <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" strokelinejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                 </div>
@@ -156,14 +128,10 @@
                             </div>
                         </div>
 
-                        <div class="mt-3 flex gap-2">
+                        <div class="mt-2 pt-2 border-t border-green-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                 ✓ Confirmada
                             </span>
-                            <button class="ml-auto bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg transition-all text-xs"
-                                    onclick="confirmCancelAnyLesson({{ lesson.id }}, '{{ lesson.date|date:'d/m/Y' }} às {{ lesson.time|time:'H:i' }}')">
-                                ❌ Cancelar
-                            </button>
                         </div>
                     </div>
                     {% empty %}
@@ -214,14 +182,10 @@
                             </div>
                         </div>
 
-                        <div class="mt-3 flex gap-2">
+                        <div class="mt-2 pt-2 border-t border-yellow-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                                 ⏳ Aguardando
                             </span>
-                            <button class="ml-auto bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg transition-all text-xs"
-                                    onclick="confirmCancelAnyLesson({{ lesson.id }}, '{{ lesson.date|date:'d/m/Y' }} às {{ lesson.time|time:'H:i' }}')">
-                                ❌ Cancelar
-                            </button>
                         </div>
                     </div>
                     {% endfor %}
@@ -273,18 +237,11 @@
                             </div>
                         </div>
 
-                        <div class="mt-3 flex gap-2">
-                            <button class="reschedule-btn flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
-                                    data-lesson-id="{{ lesson.id }}"
-                                    data-instructor-id="{{ lesson.instructor.id }}">
-                                🔄 Remarcar
-                            </button>
-                            <button class="cancel-lesson-btn flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
-                                    data-lesson-id="{{ lesson.id }}"
-                                    onclick="confirmCancelLesson({{ lesson.id }})">
-                                ❌ Cancelar
-                            </button>
-                        </div>
+                        <button class="reschedule-btn mt-3 w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
+                                data-lesson-id="{{ lesson.id }}"
+                                data-vehicle-type="{{ lesson.vehicle_type }}">
+                            🔄 Remarcar
+                        </button>
                     </div>
                     {% endfor %}
                     {% if not rejected_lessons %}
@@ -441,69 +398,6 @@
     </div>
 
     <!-- Chat Script -->
-    <!-- Modal de Remarcação -->
-    <div id="reschedule-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-bold text-gray-900">Remarcar Aula</h3>
-                <button onclick="closeRescheduleModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <p class="text-gray-600 text-sm mb-4">Escolha uma nova data, hora e instrutor para sua aula</p>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Data da Aula</label>
-                    <input type="date" id="reschedule-date" 
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           min="">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
-                    <select id="reschedule-time" 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Selecione um horário</option>
-                        <option value="08:00">08:00</option>
-                        <option value="09:00">09:00</option>
-                        <option value="10:00">10:00</option>
-                        <option value="11:00">11:00</option>
-                        <option value="14:00">14:00</option>
-                        <option value="15:00">15:00</option>
-                        <option value="16:00">16:00</option>
-                        <option value="17:00">17:00</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Instrutor</label>
-                    <select id="reschedule-instructor" 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Selecione um instrutor</option>
-                        {% for instructor in instructors %}
-                        <option value="{{ instructor.id }}">{{ instructor.instructorprofile_profile.full_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeRescheduleModal()" 
-                        class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all">
-                    Cancelar
-                </button>
-                <button id="reschedule-submit-btn" onclick="submitReschedule()" 
-                        class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all">
-                    Remarcar
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const chatToggle = document.getElementById('chat-toggle');
@@ -523,144 +417,24 @@
             }
         });
 
-
-
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        // Função para cancelar definitivamente uma aula recusada
-        function confirmCancelLesson(lessonId) {
-            if (confirm('❌ Tem certeza que deseja cancelar definitivamente esta aula?\n\nEsta ação não pode ser desfeita e a aula será removida permanentemente.')) {
-                const button = event.target;
-                button.disabled = true;
-                button.textContent = 'Cancelando...';
-                
-                fetch(`/api/cancel-rejected-lesson/${lessonId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Remove o card com animação
-                        const card = document.getElementById(`rejected-lesson-${lessonId}`);
-                        if (card) {
-                            card.style.opacity = '0';
-                            card.style.transform = 'scale(0.95)';
-                            setTimeout(() => card.remove(), 300);
-                        }
-                        
-                        alert('✅ Aula cancelada definitivamente.');
-                        
-                        // Recarrega após 1s para atualizar os contadores
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        alert('❌ Erro: ' + data.error);
-                        button.disabled = false;
-                        button.textContent = '❌ Cancelar';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('❌ Erro ao cancelar aula');
-                    button.disabled = false;
-                    button.textContent = '❌ Cancelar';
-                });
-            }
-        }
-
-        // Função genérica para cancelar qualquer aula (próximas, aguardando, etc)
-        function confirmCancelAnyLesson(lessonId, lessonDate) {
-            if (confirm(`❌ Deseja cancelar a aula de ${lessonDate}?\n\nEsta ação não pode ser desfeita.`)) {
-                const button = event.target;
-                button.disabled = true;
-                button.textContent = 'Cancelando...';
-                
-                fetch(`/api/cancel-lesson/${lessonId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('✅ Aula cancelada com sucesso.');
-                        
-                        // Recarrega após 1s para atualizar os contadores
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        alert('❌ Erro: ' + data.error);
-                        button.disabled = false;
-                        button.textContent = '❌ Cancelar';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('❌ Erro ao cancelar aula');
-                    button.disabled = false;
-                    button.textContent = '❌ Cancelar';
-                });
-            }
-        }
-
-        // Fechar modal ao clicar fora
-        document.addEventListener('DOMContentLoaded', function() {
-            // Reschedule button event listeners
-            document.querySelectorAll('.reschedule-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const lessonId = this.getAttribute('data-lesson-id');
-                    const instructorId = this.getAttribute('data-instructor-id');
-                    openRescheduleModal(lessonId, instructorId);
-                });
+        // Reschedule button event listeners
+        document.querySelectorAll('.reschedule-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const lessonId = this.getAttribute('data-lesson-id');
+                const vehicleType = this.getAttribute('data-vehicle-type');
+                openRescheduleModal(lessonId, vehicleType);
             });
-
-            const modal = document.getElementById('reschedule-modal');
-            if (modal) {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) {
-                        closeRescheduleModal();
-                    }
-                });
-            }
-
-            const dateInput = document.getElementById('reschedule-date');
-            if (dateInput) {
-                const today = new Date().toISOString().split('T')[0];
-                dateInput.min = today;
-            }
         });
 
         // Modal de remarcação
         let currentRescheduleId = null;
 
-        function openRescheduleModal(lessonId, instructorId) {
+        function openRescheduleModal(lessonId, vehicleType) {
             currentRescheduleId = lessonId;
             const modal = document.getElementById('reschedule-modal');
             if (modal) {
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                // Define o instrutor atual como selecionado
-                const instructorSelect = document.getElementById('reschedule-instructor');
-                if (instructorSelect) {
-                    instructorSelect.value = instructorId;
-                }
             }
         }
 
@@ -673,7 +447,6 @@
             // Limpar formulário
             document.getElementById('reschedule-date').value = '';
             document.getElementById('reschedule-time').value = '';
-            document.getElementById('reschedule-instructor').value = '';
         }
 
         function submitReschedule() {
@@ -681,7 +454,6 @@
 
             const newDate = document.getElementById('reschedule-date').value;
             const newTime = document.getElementById('reschedule-time').value;
-            const newInstructor = document.getElementById('reschedule-instructor').value;
 
             if (!newDate || !newTime) {
                 alert('Por favor, selecione uma data e hora');
@@ -700,8 +472,7 @@
                 },
                 body: JSON.stringify({
                     date: newDate,
-                    time: newTime,
-                    instructor_id: newInstructor
+                    time: newTime
                 })
             })
             .then(response => response.json())
@@ -733,8 +504,96 @@
                 button.textContent = 'Remarcar';
             });
         }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Fechar modal ao clicar fora
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('reschedule-modal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeRescheduleModal();
+                    }
+                });
+            }
+        });
     </script>
 
+    <!-- Modal de Remarcação -->
+    <div id="reschedule-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Remarcar Aula</h3>
+                <button onclick="closeRescheduleModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
 
+            <p class="text-gray-600 text-sm mb-4">Escolha uma nova data e hora para sua aula</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data da Aula</label>
+                    <input type="date" id="reschedule-date" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           min="">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                    <select id="reschedule-time" 
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Selecione um horário</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeRescheduleModal()" 
+                        class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all">
+                    Cancelar
+                </button>
+                <button id="reschedule-submit-btn" onclick="submitReschedule()" 
+                        class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all">
+                    Remarcar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Definir data mínima como hoje
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('reschedule-date');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.min = today;
+            }
+        });
+    </script>
 </div>
 {% endblock %}

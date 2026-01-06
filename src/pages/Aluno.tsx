@@ -16,6 +16,13 @@ const completedLessons = [
   { date: "20/12/2024", time: "14:00", instructor: "Carlos Mendes", duration: "50 min", score: "Regular" },
 ];
 
+const skills = [
+  { name: "Básico de Direção", progress: 85, status: "Bom" },
+  { name: "Baliza", progress: 65, status: "Em andamento" },
+  { name: "Controle de Embreagem", progress: 45, status: "Precisa de prática" },
+  { name: "Rotatórias", progress: 70, status: "Bom" },
+];
+
 const Aluno = () => {
   const totalHours = 12;
   const requiredHours = 20;
@@ -92,7 +99,6 @@ const Aluno = () => {
               icon={CheckCircle}
               variant="success"
             />
-          </div>
           </div>
         </div>
 

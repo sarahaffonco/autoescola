@@ -64,7 +64,7 @@ Abra seu navegador em: **http://localhost:8000/**
 ✅ Gestão de horários
 
 ### Para Alunos
-✅ Acompanhamento de progresso (20h obrigatórias CONTRAN)
+✅ Acompanhamento de progresso (2h obrigatórias CONTRAN)
 ✅ Agendamento de aulas práticas
 ✅ Visualização de próximas aulas
 ✅ Histórico de aulas completadas
