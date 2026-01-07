@@ -1,0 +1,23 @@
+# Quick Email Setup
+
+**File to edit:** `.env`
+
+**What to change:**
+```
+EMAIL_HOST_USER=seu-email@gmail.com          # Change to your Gmail
+EMAIL_HOST_PASSWORD=sua-senha-de-app-16      # Change to your App Password
+```
+
+**To get App Password:**
+1. Go to myaccount.google.com
+2. Security → App passwords
+3. Select Mail + your device
+4. Copy the 16-character password
+
+**After updating .env:**
+- Restart Django server: `Ctrl+C` then `python manage.py runserver`
+- Test: Login page → Forgot password → enter your Gmail
+- Email should arrive in seconds
+
+**Current status:** Console backend active (emails print to terminal)
+**After setup:** Real emails will be sent to inbox

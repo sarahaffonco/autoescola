@@ -5,6 +5,12 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse 
 from django.template.loader import render_to_string 
 from django.utils import timezone
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
+import json
 
 from .forms import (
     UserLoginForm, 
@@ -257,27 +263,39 @@ def instructor_vehicle_view(request):
         messages.error(request, 'Perfil de instrutor não encontrado.')
         return redirect('instrutor_dashboard')
 
-    vehicle = getattr(profile, 'vehicle', None)
-    if not vehicle:
-        vehicle = InstructorVehicle(instructor=profile)
+    vehicles = profile.vehicles.all().order_by('-id')
+    editing_vehicle = None
 
     if request.method == 'POST':
-        form = InstructorVehicleForm(request.POST, instance=vehicle)
+        vehicle_id = request.POST.get('vehicle_id')
+        if vehicle_id:
+            editing_vehicle = vehicles.filter(id=vehicle_id).first()
+
+        form = InstructorVehicleForm(request.POST, instance=editing_vehicle)
         if form.is_valid():
             entity = form.save(commit=False)
             entity.instructor = profile
             entity.save()
-            messages.success(request, 'Dados do veículo atualizados com sucesso!')
-            return redirect('instructor_vehicle')
+            action = request.POST.get('action')
+            message_text = 'Veículo atualizado com sucesso!' if editing_vehicle else 'Veículo cadastrado com sucesso!'
+            messages.success(request, message_text)
+            if action == 'save_add_another':
+                return redirect('instructor_vehicle')
+            return redirect('instrutor_dashboard')
         else:
             messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
-        form = InstructorVehicleForm(instance=vehicle)
+        vehicle_id = request.GET.get('vehicle_id')
+        if vehicle_id:
+            editing_vehicle = vehicles.filter(id=vehicle_id).first()
+        form = InstructorVehicleForm(instance=editing_vehicle)
 
     context = {
         'user': request.user,
         'profile': profile,
         'form': form,
+        'vehicles': vehicles,
+        'editing_vehicle': editing_vehicle,
         'title': 'Veículo do Instrutor'
     }
 

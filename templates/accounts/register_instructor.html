@@ -709,6 +709,16 @@
                             </label>
                         </div>
                     </div>
+
+                    <input type="hidden" name="extra_vehicles" id="extraVehiclesInput" value="{{ form.extra_vehicles.value|default:'' }}">
+
+                    <div class="mt-6 flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                            <p class="text-sm text-gray-700">Preencha os dados do veículo e clique em “Salvar e adicionar outro veículo” para incluir mais antes de finalizar.</p>
+                            <button type="button" id="addVehicleButton" class="px-5 py-3 border border-yellow-400 text-yellow-700 font-medium rounded-lg bg-white hover:bg-amber-50 transition-all shadow-sm">Salvar e adicionar outro veículo</button>
+                        </div>
+                        <div id="extraVehicleList" class="space-y-3 hidden"></div>
+                    </div>
                 </div>
 
                 <!-- Termos e Condições -->
@@ -1248,6 +1258,103 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
+    // 7.1 VEÍCULOS ADICIONAIS (botão salvar e adicionar outro)
+    // ============================================
+    const extraVehiclesInput = document.getElementById('extraVehiclesInput');
+    const addVehicleButton = document.getElementById('addVehicleButton');
+    const extraVehicleList = document.getElementById('extraVehicleList');
+    const vehicleFields = {
+        plate: document.getElementById('id_vehicle_plate'),
+        renavam: document.getElementById('id_vehicle_renavam'),
+        last_license_exercise: document.getElementById('id_vehicle_last_license_exercise'),
+        make: document.getElementById('id_vehicle_make'),
+        model: document.getElementById('id_vehicle_model'),
+        color: document.getElementById('id_vehicle_color'),
+        year: document.getElementById('id_vehicle_year'),
+        dual_control: document.getElementById('id_vehicle_dual_control'),
+        adapted_pcd: document.getElementById('id_vehicle_adapted_pcd'),
+    };
+
+    let extraVehicles = [];
+
+    const renderExtraVehicles = () => {
+        if (!extraVehicleList) return;
+        extraVehicleList.innerHTML = '';
+        if (!extraVehicles.length) {
+            extraVehicleList.classList.add('hidden');
+            return;
+        }
+        extraVehicleList.classList.remove('hidden');
+        extraVehicles.forEach((v, idx) => {
+            const item = document.createElement('div');
+            item.className = 'p-4 rounded-lg bg-white border border-amber-200 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2';
+            item.innerHTML = `<div class="text-gray-800 font-medium">${v.make} ${v.model} • ${v.plate} • ${v.year} • ${v.color}</div><div class="text-sm text-gray-600">Duplo: ${v.dual_control ? 'Sim' : 'Não'} • PCD: ${v.adapted_pcd ? 'Sim' : 'Não'}</div>`;
+            extraVehicleList.appendChild(item);
+        });
+        extraVehiclesInput.value = JSON.stringify(extraVehicles);
+    };
+
+    const readPersistedVehicles = () => {
+        if (!extraVehiclesInput || !extraVehiclesInput.value) return;
+        try {
+            const parsed = JSON.parse(extraVehiclesInput.value);
+            if (Array.isArray(parsed)) {
+                extraVehicles = parsed;
+                renderExtraVehicles();
+            }
+        } catch (err) {
+            console.warn('Não foi possível ler veículos extras persistidos', err);
+        }
+    };
+
+    const getVehiclePayload = () => {
+        const data = {};
+        let hasEmpty = false;
+        ['plate','renavam','last_license_exercise','make','model','color','year'].forEach(key => {
+            const field = vehicleFields[key];
+            const value = field ? field.value.trim() : '';
+            if (!value) hasEmpty = true;
+            data[key] = value;
+        });
+        data.dual_control = !!(vehicleFields.dual_control && vehicleFields.dual_control.checked);
+        data.adapted_pcd = !!(vehicleFields.adapted_pcd && vehicleFields.adapted_pcd.checked);
+        if (hasEmpty) return null;
+        return data;
+    };
+
+    const clearVehicleFields = () => {
+        Object.values(vehicleFields).forEach(field => {
+            if (!field) return;
+            if (field.type === 'checkbox') {
+                field.checked = false;
+            } else {
+                field.value = '';
+            }
+        });
+        const counter = document.getElementById('renavamCounter');
+        if (counter) {
+            counter.textContent = '(0/11)';
+            counter.className = 'font-medium text-amber-700';
+        }
+    };
+
+    if (addVehicleButton) {
+        addVehicleButton.addEventListener('click', () => {
+            const payload = getVehiclePayload();
+            if (!payload) {
+                alert('Preencha todos os campos do veículo antes de adicionar outro.');
+                return;
+            }
+            extraVehicles.push(payload);
+            renderExtraVehicles();
+            clearVehicleFields();
+            if (vehicleFields.plate) vehicleFields.plate.focus();
+        });
+    }
+
+    readPersistedVehicles();
+
+    // ============================================
     // 8. VALIDAÇÃO DE FORMULÁRIO
     // ============================================
     const form = document.getElementById('instructorForm');
@@ -1273,6 +1380,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     rgInput.focus();
                     return false;
                 }
+            }
+
+            // Persiste veículos extras no hidden antes de enviar
+            if (extraVehiclesInput) {
+                extraVehiclesInput.value = JSON.stringify(extraVehicles);
             }
             
             // Permite o formulário ser enviado para validação do backend

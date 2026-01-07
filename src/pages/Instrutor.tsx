@@ -73,7 +73,7 @@ const Instrutor = () => {
               Lembrete: Nova resolução CONTRAN 168/2004
             </p>
             <p className="text-sm text-primary-foreground/80">
-              Mínimo de 20 horas de aulas práticas obrigatórias para todos os alunos
+              Mínimo de 2 horas de aulas práticas obrigatórias para todos os alunos
             </p>
           </div>
         </div>

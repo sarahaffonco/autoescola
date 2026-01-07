@@ -28,6 +28,10 @@
     <div class="bg-white rounded-2xl shadow-card p-8">
       <form method="post" class="space-y-6" id="vehicleForm">
         {% csrf_token %}
+        {% if editing_vehicle %}
+        <input type="hidden" name="vehicle_id" value="{{ editing_vehicle.id }}">
+        <div class="p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800">Editando veículo {{ editing_vehicle.plate }}.</div>
+        {% endif %}
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -85,9 +89,31 @@
           </div>
         </div>
 
-        <div class="flex justify-between mt-6">
-          <a href="{% url 'instrutor_dashboard' %}" class="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all">Voltar</a>
-          <button type="submit" class="px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card">Salvar</button>
+        {% if vehicles %}
+        <div class="mt-8 border-t border-gray-200 pt-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Veículos cadastrados</h3>
+          <div class="space-y-3">
+            {% for vehicle in vehicles %}
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200">
+              <div class="text-gray-800">
+                <span class="font-semibold">{{ vehicle.make }} {{ vehicle.model }}</span> — {{ vehicle.plate }} · {{ vehicle.year }} · {{ vehicle.color }}
+                <span class="text-sm text-gray-500 block">Duplo: {{ vehicle.dual_control|yesno:"Sim,Não" }} · PCD: {{ vehicle.adapted_pcd|yesno:"Sim,Não" }}</span>
+              </div>
+              <div class="flex gap-3 justify-end">
+                <a href="?vehicle_id={{ vehicle.id }}" class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">Editar</a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-6">
+          <a href="{% url 'instrutor_dashboard' %}" class="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all text-center">Voltar</a>
+          <div class="flex flex-col sm:flex-row gap-3 justify-end">
+            <button type="submit" name="action" value="save_add_another" class="px-6 py-3 border border-yellow-500 text-yellow-700 font-medium rounded-lg hover:bg-yellow-50 transition-all text-center">Salvar e adicionar outro veículo</button>
+            <button type="submit" name="action" value="save" class="px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-medium rounded-lg hover:opacity-90 transition-all shadow-card text-center">Salvar</button>
+          </div>
         </div>
       </form>
     </div>

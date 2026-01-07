@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, api_views
+from . import views, api_views, password_reset_views
 from .delete_views import delete_account_view
 
 urlpatterns = [
@@ -21,6 +21,10 @@ urlpatterns = [
     path('api/logout/', api_views.logout_api, name='api_logout'),
     path('api/check-cpf/', api_views.check_cpf_api, name='api_check_cpf'),
     path('api/check-rg/', api_views.check_rg_api, name='api_check_rg'),
+    
+    # Password Reset
+    path('password-reset/', password_reset_views.password_reset_request, name='password_reset_request'),
+    path('password-reset-confirm/<uidb64>/<token>/', password_reset_views.password_reset_confirm, name='password_reset_confirm'),
     
     # Dashboards
     path('dashboard/aluno/', views.aluno_dashboard, name='aluno_dashboard'),

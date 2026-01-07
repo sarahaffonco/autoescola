@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from datetime import date, timedelta
+import json
 import re
 from .models import User, StudentProfile, InstructorProfile, EmployeeProfile, InstructorVehicle
 
@@ -479,6 +480,9 @@ class InstructorRegistrationForm(BaseRegistrationForm):
         required=False,
         label='Veículo adaptado para PCD'
     )
+
+    # Veículos adicionais capturados via JS
+    extra_vehicles = forms.CharField(required=False, widget=forms.HiddenInput())
     
     def clean_cnh(self):
         """Valida o número da CNH"""
@@ -679,6 +683,39 @@ class InstructorRegistrationForm(BaseRegistrationForm):
                     adapted_pcd=self.cleaned_data.get('vehicle_adapted_pcd', False),
                 )
                 print(f"Veículo criado com ID: {vehicle.pk}")
+
+                # Cria veículos adicionais (opcionais)
+                extra_raw = self.cleaned_data.get('extra_vehicles') or ''
+                if extra_raw.strip():
+                    try:
+                        extras = json.loads(extra_raw)
+                    except json.JSONDecodeError:
+                        extras = []
+
+                    for idx, ev in enumerate(extras, start=1):
+                        try:
+                            # Normaliza dados recebidos do hidden
+                            last_license = ev.get('last_license_exercise')
+                            if isinstance(last_license, str) and last_license:
+                                last_license = date.fromisoformat(last_license)
+                            extra_vehicle = InstructorVehicle(
+                                instructor=profile,
+                                plate=ev.get('plate', ''),
+                                renavam=ev.get('renavam', ''),
+                                last_license_exercise=last_license,
+                                model=ev.get('model', ''),
+                                make=ev.get('make', ''),
+                                color=ev.get('color', ''),
+                                year=int(ev.get('year') or 0),
+                                dual_control=bool(ev.get('dual_control')),
+                                adapted_pcd=bool(ev.get('adapted_pcd')),
+                            )
+                            extra_vehicle.full_clean()
+                            extra_vehicle.save()
+                            print(f"Veículo extra #{idx} salvo: {extra_vehicle}")
+                        except Exception as extra_err:
+                            print(f"Falha ao salvar veículo extra #{idx}: {extra_err}")
+
                 print("=== FIM save() - SUCESSO ===\n")
                 
             except Exception as e:

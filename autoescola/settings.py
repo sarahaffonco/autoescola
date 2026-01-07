@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -154,7 +155,30 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:8001', 'http://127.0.0.1:8000', 'http://127.0.0.1:8001']
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost',
+    'http://localhost:8000',
+    'http://localhost:8001',
+    'http://127.0.0.1',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1:8001',
+    # Ambientes mobile/emulador
+    'http://10.0.2.2:8000',
+    # Hosts típicos de dev em rede local/VM
+    'http://0.0.0.0:8000',
+    'http://[::1]:8000',
+    'http://10.211.55.2:8000',
+]
+
+# Em desenvolvimento, permitir CSRF de qualquer origem local (remover em produção!)
+if DEBUG:
+    CSRF_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SECURE = True
+    CSRF_TRUSTED_ORIGINS.extend([
+        'http://*',
+        'https://*',
+    ])
 
 # Session Settings
 SESSION_COOKIE_HTTPONLY = True
@@ -165,3 +189,25 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email Configuration
+_email_host_user = config('EMAIL_HOST_USER', default='')
+_email_host_password = config('EMAIL_HOST_PASSWORD', default='')
+
+# Use SMTP only if credentials are provided, otherwise use console backend
+if _email_host_user and _email_host_password:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    EMAIL_HOST_USER = _email_host_user
+    EMAIL_HOST_PASSWORD = _email_host_password
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = ''
+    EMAIL_HOST_PASSWORD = ''
+
+DEFAULT_FROM_EMAIL = 'noreply@autoescola.com'
