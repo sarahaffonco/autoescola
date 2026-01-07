@@ -11,6 +11,7 @@ import Agendamento from "./pages/Agendamento";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
+import AulaPage from "./app/instrutor/aula/page";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,46 @@ function AppRoutes() {
       {user && <Navbar />}
       <Routes>
         <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              {user?.role === 'instrutor' ? <Instrutor /> : <Aluno />}
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instrutor"
+          element={
+            <ProtectedRoute>
+              <Instrutor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instrutor/aula"
+          element={
+            <ProtectedRoute>
+              <AulaPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/aluno"
+          element={
+            <ProtectedRoute>
+              <Aluno />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agendamento"
+          element={
+            <ProtectedRoute>
+              <Agendamento />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

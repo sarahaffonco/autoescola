@@ -83,6 +83,22 @@ def instrutor_dashboard(request):
 
 
 @login_required
+def instrutor_aula(request):
+    """Instructor lesson start page with CONTRAN checklist"""
+    if request.user.role != 'instrutor':
+        return redirect('aluno_dashboard')
+    
+    profile = request.user.get_profile()
+    
+    context = {
+        'user': request.user,
+        'profile': profile,
+    }
+    
+    return render(request, 'core/instrutor_aula.html', context)
+
+
+@login_required
 def aluno_dashboard(request):
     """Student dashboard view"""
     if request.user.role == 'instrutor':

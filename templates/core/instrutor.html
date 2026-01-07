@@ -297,6 +297,24 @@
                                     Categoria {{ lesson.vehicle_type }}
                                 </div>
                             </div>
+                            
+                            <!-- Botões de Ação -->
+                            <div class="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+                                {% now "Y-m-d" as today %}
+                                {% now "H:i" as current_time %}
+                                {% if lesson.date|date:"Y-m-d" == today %}
+                                    {% if lesson.time|time:"H:i" <= current_time|add:"00:30" %}
+                                        <a href="{% url 'instrutor_aula' %}?lesson_id={{ lesson.id }}" 
+                                           class="flex-1 text-green-600 hover:text-green-700 text-xs font-medium text-center py-2 px-3 bg-green-50 hover:bg-green-100 rounded-lg transition-all">
+                                            ▶ Iniciar Aula
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                                <button class="instructor-cancel-lesson-btn flex-1 text-red-600 hover:text-red-700 text-xs font-medium text-center py-2 px-3 bg-red-50 hover:bg-red-100 rounded-lg transition-all" 
+                                        data-lesson-id="{{ lesson.id }}">
+                                    ✗ Cancelar
+                                </button>
+                            </div>
                         </div>
                 </div>
                 {% empty %}
@@ -601,7 +619,51 @@
                     rejectLesson(lessonId);
                 });
             });
+
+            // Event listener para botões de cancelar aula (instrutor)
+            const instructorCancelButtons = document.querySelectorAll('.instructor-cancel-lesson-btn');
+            instructorCancelButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const lessonId = this.getAttribute('data-lesson-id');
+                    instructorCancelLesson(lessonId);
+                });
+            });
         });
+
+        // Função para cancelar aula (instrutor)
+        function instructorCancelLesson(lessonId) {
+            if (!confirm('Tem certeza que deseja cancelar esta aula? O aluno será notificado.')) return;
+
+            const button = document.querySelector(`[data-lesson-id="${lessonId}"].instructor-cancel-lesson-btn`);
+            button.disabled = true;
+            button.innerHTML = '<span class="animate-spin">⏳</span> Cancelando...';
+
+            fetch(`/api/instructor-cancel-lesson/${lessonId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Aula cancelada com sucesso!');
+                    location.reload();
+                } else {
+                    alert('❌ Erro: ' + data.error);
+                    button.disabled = false;
+                    button.innerHTML = '✗ Cancelar';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Erro ao cancelar aula');
+                button.disabled = false;
+                button.innerHTML = '✗ Cancelar';
+            });
+        }
     </script>
 {% endblock %}
 

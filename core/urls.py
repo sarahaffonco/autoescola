@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.instrutor_dashboard, name='instrutor_dashboard'),
+    path('aula/', views.instrutor_aula, name='instrutor_aula'),
     path('aluno/', views.aluno_dashboard, name='aluno_dashboard'),
     path('agendamento/', views.agendamento, name='agendamento'),
     path('api/lookup-cep/', views.lookup_cep, name='lookup_cep'),

@@ -1,6 +1,7 @@
-import { Calendar, Users, CheckCircle, Clock, TrendingUp, AlertCircle } from "lucide-react";
+import { Calendar, Users, CheckCircle, Clock, TrendingUp, AlertCircle, Play } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import LessonCard from "@/components/dashboard/LessonCard";
+import { useNavigate } from "react-router-dom";
 
 const mockLessons = [
   {
@@ -50,6 +51,8 @@ const mockLessons = [
 ];
 
 const Instrutor = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background pt-20 pb-12">
       <div className="container mx-auto px-4">
@@ -76,6 +79,17 @@ const Instrutor = () => {
               Mínimo de 2 horas de aulas práticas obrigatórias para todos os alunos
             </p>
           </div>
+        </div>
+
+        {/* Botão Iniciar Aula */}
+        <div className="mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
+          <button
+            onClick={() => navigate('/instrutor/aula')}
+            className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 group"
+          >
+            <Play className="h-6 w-6 group-hover:scale-110 transition-transform" />
+            Iniciar Nova Aula
+          </button>
         </div>
 
         {/* Stats Grid */}
