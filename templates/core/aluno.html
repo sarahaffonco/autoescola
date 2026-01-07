@@ -16,9 +16,17 @@
                 </span>
             </p>
             {% endif %}
-            <p class="text-gray-600">
-                Acompanhe seu progresso e próximas aulas
-            </p>
+
+            <div class="flex justify-end mt-4">
+                <a href="{% url 'agendamento' %}"
+                   class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg shadow hover:shadow-md hover:bg-blue-700 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Agendar Aula
+                </a>
+            </div>
+
         </div>
 
         <!-- Progress Banner -->
@@ -42,7 +50,7 @@
                 </div>
                 <div class="flex justify-between mt-2 text-sm text-white/80">
                     <span>0h</span>
-                    <span>20h (mínimo CONTRAN)</span>
+                    <span>2h (mínimo CONTRAN)</span>
                 </div>
             </div>
         </div>
@@ -98,12 +106,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <h2 class="text-lg font-bold text-gray-900">Próximas Aulas</h2>
-                    <span class="ml-auto bg-green-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ upcoming_lessons|length }}</span>
+                    <span id="upcoming-count" class="ml-auto bg-green-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ upcoming_lessons|length }}</span>
                 </div>
 
-                <div class="space-y-3">
+                <div id="upcoming-lessons-container" class="space-y-3">
                     {% for lesson in upcoming_lessons %}
-                    <div class="bg-white rounded-xl p-4 border border-green-200 hover:shadow-md transition-all">
+                    <div class="lesson-card bg-white rounded-xl p-4 border border-green-200 hover:shadow-md transition-all" id="upcoming-lesson-{{ lesson.id }}">
                         <div class="flex items-start gap-2 mb-2">
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white font-bold text-sm flex-shrink-0">
                                 {{ lesson.instructor.full_name|first }}
@@ -129,9 +137,12 @@
                         </div>
 
                         <div class="mt-2 pt-2 border-t border-green-100">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                ✓ Confirmada
-                            </span>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                    ✓ Confirmada
+                                </span>
+                                <button class="cancel-lesson-btn text-red-600 hover:text-red-700 text-xs font-medium" data-lesson-id="{{ lesson.id }}">Cancelar</button>
+                            </div>
                         </div>
                     </div>
                     {% empty %}
@@ -152,12 +163,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <h2 class="text-lg font-bold text-gray-900">Aguardando</h2>
-                    <span class="ml-auto bg-yellow-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ pending_lessons|length }}</span>
+                    <span id="pending-count" class="ml-auto bg-yellow-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ pending_lessons|length }}</span>
                 </div>
 
-                <div class="space-y-3">
+                <div id="pending-lessons-container" class="space-y-3">
                     {% for lesson in pending_lessons %}
-                    <div class="bg-white rounded-xl p-4 border border-yellow-200 hover:shadow-md transition-all">
+                    <div class="lesson-card bg-white rounded-xl p-4 border border-yellow-200 hover:shadow-md transition-all" id="pending-lesson-{{ lesson.id }}">
                         <div class="flex items-start gap-2 mb-2">
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500 text-white font-bold text-sm flex-shrink-0">
                                 {{ lesson.instructor.full_name|first }}
@@ -183,9 +194,12 @@
                         </div>
 
                         <div class="mt-2 pt-2 border-t border-yellow-100">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                ⏳ Aguardando
-                            </span>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    ⏳ Aguardando
+                                </span>
+                                <button class="cancel-lesson-btn text-red-600 hover:text-red-700 text-xs font-medium" data-lesson-id="{{ lesson.id }}">Cancelar</button>
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
@@ -207,10 +221,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                     <h2 class="text-lg font-bold text-gray-900">Recusadas</h2>
-                    <span class="ml-auto bg-red-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ rejected_lessons|length }}</span>
+                    <span id="rejected-count" class="ml-auto bg-red-500 text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{{ rejected_lessons|length }}</span>
                 </div>
 
-                <div class="space-y-3">
+                <div id="rejected-lessons-container" class="space-y-3">
                     {% for lesson in rejected_lessons %}
                     <div class="bg-white rounded-xl p-4 border border-red-200 hover:shadow-md transition-all" id="rejected-lesson-{{ lesson.id }}">
                         <div class="flex items-start gap-2 mb-2">
@@ -237,11 +251,17 @@
                             </div>
                         </div>
 
-                        <button class="reschedule-btn mt-3 w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
+                        <div class="mt-3 grid grid-cols-2 gap-2">
+                        <button class="reschedule-btn w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
                                 data-lesson-id="{{ lesson.id }}"
                                 data-vehicle-type="{{ lesson.vehicle_type }}">
                             🔄 Remarcar
                         </button>
+                        <button class="cancel-rejected-btn w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-2 rounded-lg transition-all text-xs"
+                                data-lesson-id="{{ lesson.id }}">
+                            🗑️ Cancelar
+                        </button>
+                        </div>
                     </div>
                     {% endfor %}
                     {% if not rejected_lessons %}
@@ -310,6 +330,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Toasts -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-2"></div>
 
     <!-- Chat Bubble -->
     <div id="chat-bubble" class="fixed bottom-6 right-6 z-50 group">
@@ -400,6 +423,138 @@
     <!-- Chat Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Cancel helpers
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+            }
+
+            function updateCount(elId, delta) {
+                const el = document.getElementById(elId);
+                if (!el) return;
+                const num = parseInt(el.textContent || '0', 10) || 0;
+                el.textContent = Math.max(0, num + delta);
+            }
+
+            function ensureEmptyPlaceholder(containerId, emptyHtml) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (container.querySelectorAll('.lesson-card').length === 0 && !container.querySelector('[data-empty]')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.setAttribute('data-empty', '1');
+                    wrapper.innerHTML = emptyHtml;
+                    container.appendChild(wrapper);
+                }
+            }
+
+            function attachCancelHandlers() {
+                // Generic cancel for pending/scheduled
+                document.querySelectorAll('.cancel-lesson-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const lessonId = btn.getAttribute('data-lesson-id');
+                        if (!lessonId) return;
+                        if (!confirm('Tem certeza que deseja cancelar esta aula?')) return;
+
+                        fetch(`/api/cancel-lesson/${lessonId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken') || '',
+                            },
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.success) {
+                                // Remove card and update counts
+                                const upcomingCard = document.getElementById(`upcoming-lesson-${lessonId}`);
+                                const pendingCard = document.getElementById(`pending-lesson-${lessonId}`);
+                                                                if (upcomingCard) {
+                                    upcomingCard.remove();
+                                    updateCount('upcoming-count', -1);
+                                    ensureEmptyPlaceholder('upcoming-lessons-container', `\
+<div class=\"text-center py-6 text-gray-500\" data-empty>\
+  <svg class=\"w-8 h-8 mx-auto mb-2 text-gray-300\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\
+    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\"></path>\
+  </svg>\
+  <p class=\"text-xs\">Nenhuma aula</p>\
+</div>`);
+                                }
+                                if (pendingCard) {
+                                    pendingCard.remove();
+                                    updateCount('pending-count', -1);
+                                    ensureEmptyPlaceholder('pending-lessons-container', `\
+<div class=\"text-center py-6 text-gray-500\" data-empty>\
+  <svg class=\"w-8 h-8 mx-auto mb-2 text-gray-300\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\
+    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z\"></path>\
+  </svg>\
+  <p class=\"text-xs\">Nenhuma aula</p>\
+</div>`);
+                                }
+                                                                showToast('Aula cancelada com sucesso.', 'success');
+                            } else {
+                                showToast((data && data.error) || 'Não foi possível cancelar a aula.', 'error');
+                            }
+                        })
+                        .catch(() => showToast('Erro ao cancelar a aula.', 'error'));
+                    });
+                });
+
+                // Cancel rejected (definitive delete)
+                document.querySelectorAll('.cancel-rejected-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const lessonId = btn.getAttribute('data-lesson-id');
+                        if (!lessonId) return;
+                        if (!confirm('Cancelar definitivamente esta aula recusada?')) return;
+
+                        fetch(`/api/cancel-rejected-lesson/${lessonId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken') || '',
+                            },
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.success) {
+                                const card = document.getElementById(`rejected-lesson-${lessonId}`);
+                                if (card) card.remove();
+                                updateCount('rejected-count', -1);
+                                                                ensureEmptyPlaceholder('rejected-lessons-container', `\
+<div class=\"text-center py-6 text-gray-500\" data-empty>\
+  <svg class=\"w-8 h-8 mx-auto mb-2 text-gray-300\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\
+    <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"></path>\
+  </svg>\
+  <p class=\"text-xs\">Nenhuma aula</p>\
+</div>`);
+                                                                showToast((data && data.message) || 'Aula cancelada definitivamente.', 'success');
+                            } else {
+                                showToast((data && data.error) || 'Não foi possível cancelar.', 'error');
+                            }
+                        })
+                        .catch(() => showToast('Erro ao cancelar.', 'error'));
+                    });
+                });
+            }
+
+            attachCancelHandlers();
+            
+            // Toast helper
+            function showToast(message, type = 'success') {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+                const toast = document.createElement('div');
+                const base = 'min-w-[260px] max-w-sm px-4 py-3 rounded-lg shadow-lg text-white transition transform duration-300';
+                const color = type === 'error' ? 'bg-red-600' : (type === 'warning' ? 'bg-yellow-600' : 'bg-green-600');
+                toast.className = `${base} ${color} translate-x-4 opacity-0`;
+                toast.textContent = message;
+                container.appendChild(toast);
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-x-4', 'opacity-0');
+                });
+                setTimeout(() => {
+                    toast.classList.add('translate-x-4', 'opacity-0');
+                    setTimeout(() => toast.remove(), 250);
+                }, 3000);
+            }
             const chatToggle = document.getElementById('chat-toggle');
             const closeChat = document.getElementById('close-chat');
             const chatWindow = document.getElementById('chat-window');
@@ -456,7 +611,7 @@
             const newTime = document.getElementById('reschedule-time').value;
 
             if (!newDate || !newTime) {
-                alert('Por favor, selecione uma data e hora');
+                showToast('Por favor, selecione uma data e hora', 'error');
                 return;
             }
 
@@ -485,21 +640,20 @@
                         card.style.transform = 'translateX(-100%)';
                         setTimeout(() => card.remove(), 300);
                     }
-                    
-                    alert('✅ Aula remarcada com sucesso! Aguarde a confirmação do instrutor.');
+                    showToast('Aula remarcada com sucesso! Aguarde a confirmação do instrutor.', 'success');
                     closeRescheduleModal();
                     
                     // Recarrega após 1s
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    alert('❌ Erro: ' + data.error);
+                    showToast('Erro: ' + (data.error || 'Não foi possível remarcar.'), 'error');
                     button.disabled = false;
                     button.textContent = 'Remarcar';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('❌ Erro ao remarcar aula');
+                showToast('Erro ao remarcar aula', 'error');
                 button.disabled = false;
                 button.textContent = 'Remarcar';
             });

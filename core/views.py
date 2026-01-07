@@ -59,13 +59,24 @@ def instrutor_dashboard(request):
         student_rating__isnull=False
     ).select_related('student').order_by('-updated_at')[:5]
     
+    profile = request.user.get_profile()
+    vehicles = profile.vehicles.all().order_by('-id') if profile else []
+    selected_vehicle = None
+    vehicle_param = request.GET.get('vehicle_id')
+    if vehicle_param:
+        selected_vehicle = vehicles.filter(id=vehicle_param).first()
+    if not selected_vehicle:
+        selected_vehicle = vehicles.first() if vehicles else None
+
     context = {
         'user': request.user,
-        'profile': request.user.get_profile(),
+        'profile': profile,
         'stats': stats,
         'upcoming_lessons': upcoming_lessons,
         'pending_lessons': pending_lessons,
         'recent_ratings': recent_ratings,
+        'vehicles': vehicles,
+        'selected_vehicle': selected_vehicle,
     }
     
     return render(request, 'core/instrutor.html', context)
@@ -141,14 +152,14 @@ def agendamento(request):
     from accounts.models import InstructorVehicle
     
     if request.method == 'POST':
-        form = LessonForm(request.POST)
+        form = LessonForm(request.POST, student=request.user)
         if form.is_valid():
             lesson = form.save(commit=False)
             lesson.student = request.user
             lesson.save()
             return redirect('aluno_dashboard')
     else:
-        form = LessonForm()
+        form = LessonForm(student=request.user)
     
     # Get available instructors
     from accounts.models import User

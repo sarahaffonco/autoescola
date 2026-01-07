@@ -433,18 +433,23 @@ class InstructorProfile(BaseProfile):
         """Calcula a nova avaliação média"""
         # Esta lógica seria implementada quando houver sistema de avaliações
         pass
-    
+
     def is_approved(self):
         """Verifica se o instrutor está aprovado"""
         return self.status == 'ativo'
 
+    @property
+    def vehicle(self):
+        """Mantém compatibilidade legada retornando o primeiro veículo cadastrado."""
+        return getattr(self, 'vehicles', None).order_by('-id').first() if hasattr(self, 'vehicles') else None
+
 
 class InstructorVehicle(models.Model):
     """Informações do veículo associado ao instrutor"""
-    instructor = models.OneToOneField(
+    instructor = models.ForeignKey(
         InstructorProfile,
         on_delete=models.CASCADE,
-        related_name='vehicle',
+        related_name='vehicles',
         verbose_name="Instrutor"
     )
 
@@ -465,6 +470,7 @@ class InstructorVehicle(models.Model):
     class Meta:
         verbose_name = "Veículo do Instrutor"
         verbose_name_plural = "Veículos dos Instrutores"
+        unique_together = ('instructor', 'plate')
 
     def __str__(self):
         return f"{self.plate} - {self.make} {self.model} ({self.year})"

@@ -36,9 +36,7 @@ const Aluno = () => {
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Bem-vindo, João! 🚗
           </h1>
-          <p className="text-muted-foreground">
-            Acompanhe seu progresso e próximas aulas
-          </p>
+
         </div>
 
         {/* Progress Banner */}
